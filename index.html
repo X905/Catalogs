@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Catálogo de Productos — Hispanic Foods</title>
+  <link rel="stylesheet" href="assets/css/fonts.css">
+  <link rel="stylesheet" href="assets/css/catalog.css">
+  <style>
+    /* estilos exclusivos del editor que no afectan la impresión */
+    #flash {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(30px);
+      background: #2c9aa6; color: #fff; padding: 11px 20px; border-radius: 10px;
+      font-size: 13px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,.2);
+      opacity: 0; pointer-events: none; transition: .25s; z-index: 50;
+    }
+    #flash.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .zoombar { display: flex; align-items: center; gap: 6px; }
+    .zoombar span { font-size: 12px; font-weight: 600; color: #6b7178; min-width: 42px; text-align: center; }
+    select { font-family: inherit; }
+    @media print { #flash { display: none; } }
+  </style>
+</head>
+<body class="app">
+
+  <!-- Barra superior -->
+  <header class="topbar">
+    <div class="brand-mark">
+      🌿 Catálogo
+      <small>Hispanic Foods</small>
+    </div>
+    <div class="spacer"></div>
+
+    <label class="switch" title="Alterna entre la versión con precios y sin precios">
+      <input type="checkbox" id="priceToggle" checked>
+      Mostrar precios
+    </label>
+
+    <div class="zoombar">
+      <button class="btn small" id="zoomOut" title="Alejar">−</button>
+      <span id="zoomLbl">85%</span>
+      <button class="btn small" id="zoomIn" title="Acercar">+</button>
+    </div>
+
+    <button class="btn" id="btnImport" title="Cargar un catálogo desde un archivo JSON">Importar</button>
+    <button class="btn" id="btnExport" title="Guardar el catálogo como archivo JSON">Exportar JSON</button>
+    <button class="btn primary" id="btnPrint" title="Abrir el diálogo de impresión y elegir «Guardar como PDF»">Exportar PDF</button>
+  </header>
+
+  <!-- Panel lateral (editor) -->
+  <aside class="sidebar">
+    <h2>Portada y contacto</h2>
+    <div id="brandEditor"></div>
+
+    <h2 style="margin-top:18px">Categorías y productos</h2>
+    <div id="catEditor"></div>
+
+    <div class="side-foot">
+      <button class="btn" id="btnAddCat">+ Añadir categoría</button>
+      <button class="btn ghost" id="btnReset" style="color:#d0512d">Restablecer al catálogo original</button>
+    </div>
+  </aside>
+
+  <!-- Previsualización / documento -->
+  <main class="preview-wrap">
+    <div id="preview" class="preview-scale"></div>
+  </main>
+
+  <div id="flash"></div>
+
+  <script src="assets/js/seed.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

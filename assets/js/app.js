@@ -1,0 +1,479 @@
+/* ============================================================
+   Catálogo de Productos — Hispanic Foods
+   Lógica de la aplicación: estado, editor y previsualización/PDF.
+   Sin dependencias externas. Funciona abriendo index.html o con un
+   servidor local. Los datos se guardan en localStorage.
+   ============================================================ */
+(function () {
+  "use strict";
+
+  var STORAGE_KEY = "hispanic_catalog_v1";
+  // Productos por hoja. La primera hoja de cada categoría lleva el banner,
+  // por eso caben menos tarjetas que en las hojas de continuación.
+  var FIRST_PAGE = 12;
+  var CONT_PAGE = 15;
+  var ACCENTS = ["orange", "coral", "gold", "green", "teal", "cyan"];
+  var ACCENT_LABEL = {
+    orange: "Naranja", coral: "Coral", gold: "Dorado",
+    green: "Verde", teal: "Turquesa", cyan: "Celeste"
+  };
+
+  var state = null;
+  var openCats = {}; // categorías expandidas en el editor
+
+  /* ---------------- utilidades ---------------- */
+  function uid(p) { return (p || "id") + "-" + Math.random().toString(36).slice(2, 9); }
+  function el(tag, cls, txt) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (txt != null) n.textContent = txt;
+    return n;
+  }
+  function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
+
+  function normalize(data) {
+    // garantiza ids y estructura
+    data.settings = data.settings || { showPrices: true, currency: "$" };
+    if (typeof data.settings.showPrices !== "boolean") data.settings.showPrices = true;
+    data.settings.currency = data.settings.currency || "$";
+    (data.categories || []).forEach(function (c) {
+      if (!c.id) c.id = uid("cat");
+      if (!c.accent) c.accent = "orange";
+      c.products = c.products || [];
+      c.products.forEach(function (p) { if (!p.id) p.id = uid("p"); if (p.price == null) p.price = ""; });
+    });
+    return data;
+  }
+
+  function load() {
+    var raw = null;
+    try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) {}
+    if (raw) {
+      try { return normalize(JSON.parse(raw)); } catch (e) {}
+    }
+    return normalize(deepClone(window.CATALOG_SEED));
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (e) {
+      // El almacenamiento del navegador es limitado (~5 MB). Con muchas
+      // imágenes puede llenarse: avisamos y sugerimos exportar a JSON.
+      console.warn("No se pudo guardar en el navegador:", e);
+      flash("Almacenamiento lleno. Exporta el catálogo a JSON para no perder cambios.", true);
+    }
+  }
+
+  var saveTimer = null;
+  function saveSoon() { clearTimeout(saveTimer); saveTimer = setTimeout(save, 350); }
+
+  /* ---------------- formato de precio ---------------- */
+  function formatPrice(price) {
+    var s = (price == null ? "" : String(price)).trim();
+    if (!s) return { text: "", consult: false };
+    if (/^\d+(\.\d+)?$/.test(s)) {
+      return { text: state.settings.currency + Number(s).toFixed(2), consult: false };
+    }
+    return { text: s, consult: true }; // texto libre, p.ej. "Consultar precio"
+  }
+
+  /* ============================================================
+     PREVISUALIZACIÓN (hojas tamaño carta)
+     ============================================================ */
+  function paginate(products) {
+    var pages = [];
+    var arr = products.slice();
+    if (arr.length === 0) return [[]]; // al menos la hoja con el banner
+    pages.push(arr.splice(0, FIRST_PAGE));
+    while (arr.length) pages.push(arr.splice(0, CONT_PAGE));
+    return pages;
+  }
+
+  function footEl() {
+    var b = state.brand;
+    var f = el("div", "foot");
+    f.appendChild(el("div", "l", b.companyName + " — " + b.address));
+    f.appendChild(el("div", "r", "Tel: " + b.phone + " · " + b.email));
+    return f;
+  }
+
+  function renderCover() {
+    var b = state.brand;
+    var page = el("div", "page cover");
+    var inner = el("div", "page-inner");
+    var card = el("div", "cover-card");
+
+    var top = el("div", "cover-bar top");
+    var bot = el("div", "cover-bar bottom");
+    for (var i = 0; i < 5; i++) { top.appendChild(el("span")); bot.appendChild(el("span")); }
+    card.appendChild(top); card.appendChild(bot);
+
+    if (b.logo) {
+      var lg = el("div", "cover-logo");
+      var img = new Image(); img.src = b.logo; img.alt = b.companyName;
+      lg.appendChild(img); card.appendChild(lg);
+    }
+    var dots = el("div", "cover-dots");
+    for (var d = 0; d < 4; d++) dots.appendChild(el("i"));
+    card.appendChild(dots);
+
+    card.appendChild(el("div", "cover-title", b.catalogTitle));
+    if (b.subtitle) card.appendChild(el("div", "cover-sub", b.subtitle));
+
+    var contact = el("div", "cover-contact");
+    contact.appendChild(el("div", "co", b.companyName));
+    contact.appendChild(el("div", "ln", b.address));
+    contact.appendChild(el("div", "ln", "Tel: " + b.phone));
+    contact.appendChild(el("div", "ln", b.email));
+    card.appendChild(contact);
+
+    inner.appendChild(card);
+    page.appendChild(inner);
+    page.appendChild(footEl());
+    return page;
+  }
+
+  function renderCard(p) {
+    var card = el("div", "card");
+    var box = el("div", "imgbox");
+    if (p.image) {
+      var img = new Image(); img.src = p.image; img.alt = p.name || "";
+      box.appendChild(img);
+    } else {
+      box.className = "imgbox empty";
+      box.appendChild(el("div", "ic", "🖼")); // 🖼
+      box.appendChild(el("div", null, "Foto"));
+    }
+    card.appendChild(box);
+    card.appendChild(el("div", "pn", p.name || ""));
+    var pr = formatPrice(p.price);
+    var pp = el("div", "pp" + (pr.consult ? " consult" : ""), pr.text);
+    card.appendChild(pp);
+    return card;
+  }
+
+  function renderCategoryPage(cat, products, isFirst, total) {
+    var page = el("div", "page category acc-" + cat.accent);
+    var inner = el("div", "page-inner");
+
+    if (isFirst) {
+      var banner = el("div", "cat-banner");
+      banner.appendChild(el("div", "t", cat.name));
+      banner.appendChild(el("div", "n", total + (total === 1 ? " producto" : " productos")));
+      inner.appendChild(banner);
+      var note = el("div", "illus-note" + (state.settings.showPrices ? " hidden" : ""),
+        state.brand.illustrativeNote || "");
+      inner.appendChild(note);
+    }
+
+    var grid = el("div", "grid");
+    products.forEach(function (p) { grid.appendChild(renderCard(p)); });
+    inner.appendChild(grid);
+
+    page.appendChild(inner);
+    page.appendChild(footEl());
+    return page;
+  }
+
+  function renderPreview() {
+    var wrap = document.getElementById("preview");
+    wrap.innerHTML = "";
+    wrap.className = "preview-scale" + (state.settings.showPrices ? "" : " no-prices");
+    wrap.appendChild(renderCover());
+    state.categories.forEach(function (cat) {
+      var pages = paginate(cat.products);
+      pages.forEach(function (prods, idx) {
+        wrap.appendChild(renderCategoryPage(cat, prods, idx === 0, cat.products.length));
+      });
+    });
+    applyZoom();
+  }
+
+  /* ============================================================
+     EDITOR (panel lateral)
+     ============================================================ */
+  function bindField(input, obj, key, after) {
+    input.value = obj[key] || "";
+    input.addEventListener("input", function () {
+      obj[key] = input.value;
+      saveSoon();
+      if (after) after();
+    });
+  }
+
+  function renderBrandEditor() {
+    var host = document.getElementById("brandEditor");
+    host.innerHTML = "";
+    var b = state.brand;
+    var fields = [
+      ["companyName", "Nombre de la empresa"],
+      ["catalogTitle", "Título del catálogo"],
+      ["subtitle", "Subtítulo (pastilla)"],
+      ["address", "Dirección"],
+      ["phone", "Teléfono"],
+      ["email", "Correo"],
+      ["illustrativeNote", "Nota (modo sin precios)"]
+    ];
+    fields.forEach(function (f) {
+      var wrap = el("div", "field");
+      wrap.appendChild(el("label", null, f[1]));
+      var inp = el("input");
+      bindField(inp, b, f[0], renderPreview);
+      wrap.appendChild(inp);
+      host.appendChild(wrap);
+    });
+
+    // Logo
+    var lf = el("div", "field");
+    lf.appendChild(el("label", null, "Logo"));
+    var logoRow = el("div", "prod-row");
+    var thumb = el("div", "thumb");
+    if (b.logo) { var im = new Image(); im.src = b.logo; thumb.appendChild(im); } else thumb.textContent = "+";
+    thumb.title = "Cambiar logo";
+    thumb.addEventListener("click", function () {
+      pickImage(function (dataUrl) { b.logo = dataUrl; save(); renderBrandEditor(); renderPreview(); });
+    });
+    logoRow.appendChild(thumb);
+    var hint = el("div", "pname"); hint.appendChild(el("span", null, "Clic para cambiar el logo"));
+    logoRow.appendChild(hint);
+    lf.appendChild(logoRow);
+    host.appendChild(lf);
+  }
+
+  function renderCatEditor() {
+    var host = document.getElementById("catEditor");
+    host.innerHTML = "";
+    state.categories.forEach(function (cat, ci) {
+      var block = el("div", "cat-block" + (openCats[cat.id] ? " open" : ""));
+
+      var head = el("div", "cat-head");
+      var dot = el("span", "dot"); dot.style.background = accentColor(cat.accent);
+      head.appendChild(dot);
+      head.appendChild(el("span", "cat-name", cat.name));
+      head.appendChild(el("span", "count", cat.products.length + " prod."));
+      head.appendChild(el("span", "chev", "›"));
+      head.addEventListener("click", function () {
+        openCats[cat.id] = !openCats[cat.id];
+        block.classList.toggle("open");
+      });
+      block.appendChild(head);
+
+      var body = el("div", "cat-body");
+
+      // nombre + acento + eliminar categoría
+      var nameField = el("div", "field");
+      nameField.appendChild(el("label", null, "Nombre de la categoría"));
+      var nameInp = el("input"); nameInp.value = cat.name;
+      nameInp.addEventListener("input", function () {
+        cat.name = nameInp.value;
+        head.querySelector(".cat-name").textContent = nameInp.value;
+        saveSoon(); renderPreview();
+      });
+      nameField.appendChild(nameInp);
+      body.appendChild(nameField);
+
+      var accField = el("div", "field");
+      accField.appendChild(el("label", null, "Color de acento"));
+      var sel = el("select");
+      sel.style.cssText = "width:100%;padding:7px 9px;border:1px solid #d3d7db;border-radius:7px;font-size:13px;";
+      ACCENTS.forEach(function (a) {
+        var o = el("option", null, ACCENT_LABEL[a]); o.value = a;
+        if (a === cat.accent) o.selected = true; sel.appendChild(o);
+      });
+      sel.addEventListener("change", function () {
+        cat.accent = sel.value; dot.style.background = accentColor(cat.accent);
+        saveSoon(); renderPreview();
+      });
+      accField.appendChild(sel);
+      body.appendChild(accField);
+
+      // productos
+      cat.products.forEach(function (p, pi) {
+        body.appendChild(renderProductRow(cat, p, pi));
+      });
+
+      // acciones
+      var actions = el("div", "cat-actions");
+      var addBtn = el("button", "btn small", "+ Producto");
+      addBtn.addEventListener("click", function () {
+        cat.products.push({ id: uid("p"), name: "NUEVO PRODUCTO", price: "" });
+        save(); renderCatEditor(); renderPreview();
+      });
+      var delBtn = el("button", "btn small ghost", "Eliminar categoría");
+      delBtn.style.color = "#d0512d";
+      delBtn.addEventListener("click", function () {
+        if (confirm("¿Eliminar la categoría \"" + cat.name + "\" y todos sus productos?")) {
+          state.categories.splice(ci, 1); save(); renderCatEditor(); renderPreview();
+        }
+      });
+      actions.appendChild(addBtn);
+      var up = el("button", "btn small", "↑");
+      up.title = "Subir categoría";
+      up.addEventListener("click", function () {
+        if (ci > 0) { var t = state.categories.splice(ci, 1)[0]; state.categories.splice(ci - 1, 0, t); save(); renderCatEditor(); renderPreview(); }
+      });
+      var down = el("button", "btn small", "↓");
+      down.title = "Bajar categoría";
+      down.addEventListener("click", function () {
+        if (ci < state.categories.length - 1) { var t = state.categories.splice(ci, 1)[0]; state.categories.splice(ci + 1, 0, t); save(); renderCatEditor(); renderPreview(); }
+      });
+      actions.appendChild(up); actions.appendChild(down);
+      actions.appendChild(delBtn);
+      body.appendChild(actions);
+
+      block.appendChild(body);
+      host.appendChild(block);
+    });
+  }
+
+  function renderProductRow(cat, p, pi) {
+    var row = el("div", "prod-row");
+    var thumb = el("div", "thumb");
+    if (p.image) { var im = new Image(); im.src = p.image; thumb.appendChild(im); }
+    else thumb.textContent = "📷"; // 📷
+    thumb.title = "Clic: subir/cambiar imagen";
+    thumb.addEventListener("click", function () {
+      pickImage(function (dataUrl) { p.image = dataUrl; save(); renderCatEditor(); renderPreview(); });
+    });
+    // quitar imagen (clic derecho)
+    thumb.addEventListener("contextmenu", function (ev) {
+      ev.preventDefault();
+      if (p.image && confirm("¿Quitar la imagen de este producto?")) {
+        delete p.image; save(); renderCatEditor(); renderPreview();
+      }
+    });
+    row.appendChild(thumb);
+
+    var nameWrap = el("div", "pname");
+    var nameInp = el("input"); nameInp.value = p.name || "";
+    nameInp.addEventListener("input", function () { p.name = nameInp.value; saveSoon(); renderPreview(); });
+    nameWrap.appendChild(nameInp);
+    row.appendChild(nameWrap);
+
+    var priceWrap = el("div", "pprice");
+    var priceInp = el("input"); priceInp.value = p.price || ""; priceInp.placeholder = "precio";
+    priceInp.addEventListener("input", function () { p.price = priceInp.value; saveSoon(); renderPreview(); });
+    priceWrap.appendChild(priceInp);
+    row.appendChild(priceWrap);
+
+    var del = el("button", "del", "✕");
+    del.title = "Eliminar producto";
+    del.addEventListener("click", function () {
+      cat.products.splice(pi, 1); save(); renderCatEditor(); renderPreview();
+    });
+    row.appendChild(del);
+    return row;
+  }
+
+  function accentColor(a) {
+    var map = { orange: "#E4572E", coral: "#E1502B", gold: "#E3A81C", green: "#5BA632", teal: "#2FA9B6", cyan: "#3FB0C9" };
+    return map[a] || "#888";
+  }
+
+  /* ---------------- imágenes ---------------- */
+  var imgInput;
+  function pickImage(cb) {
+    if (!imgInput) {
+      imgInput = el("input"); imgInput.type = "file"; imgInput.accept = "image/*";
+      imgInput.style.display = "none"; document.body.appendChild(imgInput);
+    }
+    imgInput.value = "";
+    imgInput.onchange = function () {
+      var file = imgInput.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function () { cb(reader.result); };
+      reader.readAsDataURL(file);
+    };
+    imgInput.click();
+  }
+
+  /* ---------------- importar / exportar ---------------- */
+  function exportJSON() {
+    var blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+    var a = el("a"); a.href = URL.createObjectURL(blob);
+    a.download = "catalogo-hispanic-foods.json"; a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  }
+  var jsonInput;
+  function importJSON() {
+    if (!jsonInput) {
+      jsonInput = el("input"); jsonInput.type = "file"; jsonInput.accept = "application/json,.json";
+      jsonInput.style.display = "none"; document.body.appendChild(jsonInput);
+    }
+    jsonInput.value = "";
+    jsonInput.onchange = function () {
+      var f = jsonInput.files[0]; if (!f) return;
+      var r = new FileReader();
+      r.onload = function () {
+        try {
+          state = normalize(JSON.parse(r.result));
+          save(); renderAll(); flash("Catálogo importado.");
+        } catch (e) { flash("El archivo no es un catálogo válido.", true); }
+      };
+      r.readAsText(f);
+    };
+    jsonInput.click();
+  }
+
+  function resetSeed() {
+    if (confirm("Restablecer el catálogo a los datos originales. Se perderán tus cambios. ¿Continuar?")) {
+      state = normalize(deepClone(window.CATALOG_SEED));
+      save(); renderAll(); flash("Catálogo restablecido.");
+    }
+  }
+
+  function addCategory() {
+    state.categories.push({ id: uid("cat"), name: "NUEVA CATEGORÍA", accent: ACCENTS[state.categories.length % ACCENTS.length], products: [] });
+    openCats[state.categories[state.categories.length - 1].id] = true;
+    save(); renderCatEditor(); renderPreview();
+  }
+
+  /* ---------------- zoom ---------------- */
+  var zoom = 0.85;
+  function applyZoom() {
+    var wrap = document.getElementById("preview");
+    wrap.style.transform = "scale(" + zoom + ")";
+    wrap.style.transformOrigin = "top center";
+  }
+  function setZoom(z) { zoom = Math.max(0.4, Math.min(1.5, z)); document.getElementById("zoomLbl").textContent = Math.round(zoom * 100) + "%"; applyZoom(); }
+
+  /* ---------------- avisos ---------------- */
+  var flashTimer;
+  function flash(msg, isErr) {
+    var box = document.getElementById("flash");
+    box.textContent = msg;
+    box.style.background = isErr ? "#e05252" : "#2c9aa6";
+    box.classList.add("show");
+    clearTimeout(flashTimer);
+    flashTimer = setTimeout(function () { box.classList.remove("show"); }, 2600);
+  }
+
+  /* ---------------- render global + eventos ---------------- */
+  function renderAll() { renderBrandEditor(); renderCatEditor(); renderPreview(); syncPriceSwitch(); }
+
+  function syncPriceSwitch() { document.getElementById("priceToggle").checked = state.settings.showPrices; }
+
+  function wireTopbar() {
+    document.getElementById("priceToggle").addEventListener("change", function (e) {
+      state.settings.showPrices = e.target.checked; save(); renderPreview();
+    });
+    document.getElementById("btnPrint").addEventListener("click", function () { window.print(); });
+    document.getElementById("btnExport").addEventListener("click", exportJSON);
+    document.getElementById("btnImport").addEventListener("click", importJSON);
+    document.getElementById("btnReset").addEventListener("click", resetSeed);
+    document.getElementById("btnAddCat").addEventListener("click", addCategory);
+    document.getElementById("zoomIn").addEventListener("click", function () { setZoom(zoom + 0.1); });
+    document.getElementById("zoomOut").addEventListener("click", function () { setZoom(zoom - 0.1); });
+  }
+
+  function init() {
+    state = load();
+    wireTopbar();
+    renderAll();
+    setZoom(zoom);
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+})();

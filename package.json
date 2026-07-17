@@ -1,0 +1,15 @@
+{
+  "name": "catalogo-hispanic-foods",
+  "version": "1.0.0",
+  "description": "Catálogo de productos con editor y exportación a PDF fiel al diseño original.",
+  "type": "module",
+  "scripts": {
+    "start": "python3 server.py",
+    "serve": "npx --yes serve -l 8000 .",
+    "pdf": "node export-pdf.mjs",
+    "pdf:sin-precio": "node export-pdf.mjs --sin-precio"
+  },
+  "devDependencies": {
+    "playwright": "^1.44.0"
+  }
+}
