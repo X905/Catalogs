@@ -45,7 +45,7 @@ html, body {
 body.app {
   background: #eef0f2;
   display: grid;
-  grid-template-columns: 380px 1fr;
+  grid-template-columns: 410px 1fr;
   grid-template-rows: auto 1fr;
   grid-template-areas: "top top" "side main";
   height: 100vh;
@@ -143,7 +143,9 @@ body.app {
 .prod-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid #f0f2f4; }
 .prod-row .thumb { width: 34px; height: 34px; border-radius: 6px; background: #f0f2f4 center/cover no-repeat; flex: none; display: flex; align-items: center; justify-content: center; color: #c3c9cf; font-size: 14px; cursor: pointer; border: 1px dashed #d9dde1; overflow: hidden; }
 .prod-row .thumb img { width: 100%; height: 100%; object-fit: contain; }
-.prod-row .pname { flex: 1; font-size: 12px; }
+.prod-row .pname { flex: 1; min-width: 0; font-size: 12px; }
+.prod-row .movesel { width: 30px; border: 1px solid #e0e4e8; border-radius: 5px; background: #fff; color: #7a828a; font-size: 12px; padding: 3px 2px; cursor: pointer; flex: none; }
+.prod-row .movesel:hover { border-color: var(--brand-teal); color: var(--brand-teal); }
 .prod-row .pname input { width: 100%; border: 1px solid transparent; background: transparent; padding: 3px 4px; border-radius: 5px; font-weight: 600; color: #2c3136; }
 .prod-row .pprice input { width: 78px; border: 1px solid transparent; background: transparent; padding: 3px 4px; border-radius: 5px; color: var(--ink-soft); }
 .prod-row .pname input:hover, .prod-row .pprice input:hover { background: #f4f6f8; }

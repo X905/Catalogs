@@ -357,6 +357,23 @@
     priceWrap.appendChild(priceInp);
     row.appendChild(priceWrap);
 
+    // mover a otra categoría
+    var moveSel = el("select", "movesel");
+    moveSel.title = "Mover a otra categoría";
+    var ph = el("option", null, "⇄"); ph.value = ""; ph.selected = true; moveSel.appendChild(ph);
+    state.categories.forEach(function (tc) {
+      if (tc.id === cat.id) return;
+      var o = el("option", null, tc.name); o.value = tc.id; moveSel.appendChild(o);
+    });
+    moveSel.addEventListener("change", function () {
+      var target = state.categories.filter(function (c) { return c.id === moveSel.value; })[0];
+      if (!target) return;
+      cat.products.splice(pi, 1);
+      target.products.push(p);
+      save(); renderCatEditor(); renderPreview();
+    });
+    row.appendChild(moveSel);
+
     var del = el("button", "del", "✕");
     del.title = "Eliminar producto";
     del.addEventListener("click", function () {
