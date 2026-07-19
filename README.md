@@ -59,6 +59,30 @@ npx serve -l 8000 .
 El precio admite un número (`25`, `12.50`, se muestra como `$25.00`) o texto
 libre como `Consultar precio`. Si lo dejas vacío, no se muestra precio.
 
+### Imágenes de productos
+Haz clic en la miniatura de un producto (o del logo) para subir una imagen;
+clic derecho para quitarla.
+
+- **Con el servidor (`python3 server.py`):** la imagen se guarda como archivo
+  en la carpeta **`assets/img/products/`** y el producto queda apuntando a esa
+  ruta. Además, todo el catálogo se guarda automáticamente en **`catalog.json`**.
+  Así tus imágenes y datos viven como archivos locales (puedes respaldarlos,
+  moverlos o subirlos al repositorio).
+- **Abriendo el archivo directo (`file://`):** como el navegador no puede
+  escribir en carpetas, la imagen se guarda incrustada dentro del navegador.
+  Para que las imágenes queden en la carpeta local, usa el servidor.
+
+## Dónde se guardan los datos
+
+| Cómo lo abres | Catálogo (textos/precios) | Imágenes |
+|---|---|---|
+| `python3 server.py` | `catalog.json` (en disco) | `assets/img/products/` (archivos) |
+| Doble clic (`file://`) | almacenamiento del navegador | incrustadas en el navegador |
+
+> Recomendado: usa **`python3 server.py`** para que todo quede como archivos
+> locales. `catalog.json` es la fuente de datos cuando corres con el servidor;
+> «Restablecer al catálogo original» vuelve a los datos de fábrica.
+
 ---
 
 ## Exportar a PDF
@@ -106,7 +130,9 @@ Catalogs/
 │   │   ├── seed.js          Datos iniciales del catálogo (editable)
 │   │   └── app.js           Lógica de la aplicación
 │   └── img/
-│       └── logo.png         Logo de Hispanic Foods
+│       ├── logo.png         Logo de Hispanic Foods
+│       └── products/        Imágenes de productos (se crean al subirlas)
+├── catalog.json             Catálogo guardado en disco (lo crea el servidor)
 └── README.md
 ```
 

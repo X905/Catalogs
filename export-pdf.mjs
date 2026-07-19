@@ -18,7 +18,7 @@
 import { chromium } from "playwright";
 import { fileURLToPath } from "url";
 import { dirname, resolve } from "path";
-import { readFileSync } from "fs";
+import { readFileSync, existsSync } from "fs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -26,7 +26,9 @@ const has = (f) => args.includes(f);
 const val = (f, d) => { const i = args.indexOf(f); return i >= 0 ? args[i + 1] : d; };
 
 const sinPrecio = has("--sin-precio");
-const dataFile = val("--data", null);
+// Por defecto usa catalog.json (lo que guardó el servidor) si existe.
+const defaultData = existsSync(resolve(__dirname, "catalog.json")) ? resolve(__dirname, "catalog.json") : null;
+const dataFile = val("--data", defaultData);
 const outFile = val("--out", sinPrecio ? "catalogo-sin-precio.pdf" : "catalogo.pdf");
 const STORAGE_KEY = "hispanic_catalog_v1";
 

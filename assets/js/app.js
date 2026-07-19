@@ -45,24 +45,48 @@
     return data;
   }
 
-  function load() {
+  // ¿Estamos servidos por server.py (http)? Entonces podemos guardar imágenes
+  // y el catálogo como archivos en disco. Si se abrió el archivo directamente
+  // (file://), usamos el almacenamiento del navegador (localStorage).
+  function hasServer() {
+    return location.protocol === "http:" || location.protocol === "https:";
+  }
+
+  function loadState() {
+    // Con servidor: el catálogo vive en disco (catalog.json).
+    if (hasServer()) {
+      return fetch("/api/catalog", { cache: "no-store" })
+        .then(function (r) { return r.json(); })
+        .then(function (j) {
+          if (j && !j.empty && j.categories) return normalize(j);
+          return normalize(deepClone(window.CATALOG_SEED)); // primera vez
+        })
+        .catch(function () { return normalize(deepClone(window.CATALOG_SEED)); });
+    }
+    // Sin servidor (file://): localStorage o datos semilla.
     var raw = null;
     try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) {}
-    if (raw) {
-      try { return normalize(JSON.parse(raw)); } catch (e) {}
-    }
-    return normalize(deepClone(window.CATALOG_SEED));
+    if (raw) { try { return Promise.resolve(normalize(JSON.parse(raw))); } catch (e) {} }
+    return Promise.resolve(normalize(deepClone(window.CATALOG_SEED)));
   }
 
   function save() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch (e) {
-      // El almacenamiento del navegador es limitado (~5 MB). Con muchas
-      // imágenes puede llenarse: avisamos y sugerimos exportar a JSON.
-      console.warn("No se pudo guardar en el navegador:", e);
-      flash("Almacenamiento lleno. Exporta el catálogo a JSON para no perder cambios.", true);
-    }
+    // Copia de respaldo siempre en el navegador (con servidor, las imágenes son
+    // rutas, así que el JSON es pequeño y no llena el almacenamiento).
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+    if (hasServer()) saveToDiskSoon();
+  }
+
+  var diskTimer = null;
+  function saveToDiskSoon() { clearTimeout(diskTimer); diskTimer = setTimeout(saveToDisk, 500); }
+  function saveToDisk() {
+    fetch("/api/catalog", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(state)
+    }).then(function (r) { return r.json(); })
+      .then(function (j) { if (j && j.error) flash("No se pudo guardar en disco: " + j.error, true); })
+      .catch(function () { flash("No se pudo guardar en disco (¿el servidor sigue encendido?).", true); });
   }
 
   var saveTimer = null;
@@ -232,7 +256,7 @@
     if (b.logo) { var im = new Image(); im.src = b.logo; thumb.appendChild(im); } else thumb.textContent = "+";
     thumb.title = "Cambiar logo";
     thumb.addEventListener("click", function () {
-      pickImage(function (dataUrl) { b.logo = dataUrl; save(); renderBrandEditor(); renderPreview(); });
+      acquireImage("logo", b.logo, function (src) { b.logo = src; save(); renderBrandEditor(); renderPreview(); });
     });
     logoRow.appendChild(thumb);
     var hint = el("div", "pname"); hint.appendChild(el("span", null, "Clic para cambiar el logo"));
@@ -334,7 +358,7 @@
     else thumb.textContent = "📷"; // 📷
     thumb.title = "Clic: subir/cambiar imagen";
     thumb.addEventListener("click", function () {
-      pickImage(function (dataUrl) { p.image = dataUrl; save(); renderCatEditor(); renderPreview(); });
+      acquireImage(p.name, p.image, function (src) { p.image = src; save(); renderCatEditor(); renderPreview(); });
     });
     // quitar imagen (clic derecho)
     thumb.addEventListener("contextmenu", function (ev) {
@@ -390,20 +414,48 @@
 
   /* ---------------- imágenes ---------------- */
   var imgInput;
-  function pickImage(cb) {
+  function pickFile(cb) {
     if (!imgInput) {
       imgInput = el("input"); imgInput.type = "file"; imgInput.accept = "image/*";
       imgInput.style.display = "none"; document.body.appendChild(imgInput);
     }
     imgInput.value = "";
-    imgInput.onchange = function () {
-      var file = imgInput.files[0];
-      if (!file) return;
-      var reader = new FileReader();
-      reader.onload = function () { cb(reader.result); };
-      reader.readAsDataURL(file);
-    };
+    imgInput.onchange = function () { cb(imgInput.files[0]); };
     imgInput.click();
+  }
+
+  function toDataURL(file, cb) {
+    var r = new FileReader();
+    r.onload = function () { cb(r.result); };
+    r.readAsDataURL(file);
+  }
+
+  function uploadImage(file, nameHint, oldPath) {
+    var qs = "?name=" + encodeURIComponent(nameHint || "img");
+    if (oldPath && oldPath.indexOf("assets/img/products/") === 0) {
+      qs += "&old=" + encodeURIComponent(oldPath);
+    }
+    return fetch("/api/upload" + qs, {
+      method: "POST",
+      headers: { "Content-Type": file.type || "image/png" },
+      body: file
+    }).then(function (r) { return r.json(); })
+      .then(function (j) { if (j && j.path) return j.path; throw new Error("upload"); });
+  }
+
+  // Obtiene una imagen: la guarda como archivo (con servidor) o como data URL
+  // (sin servidor), y devuelve la ruta/URL para usar en el producto.
+  function acquireImage(nameHint, oldPath, cb) {
+    pickFile(function (file) {
+      if (!file) return;
+      if (hasServer()) {
+        uploadImage(file, nameHint, oldPath)
+          .then(cb)
+          .catch(function () { toDataURL(file, cb); }); // respaldo si falla la subida
+      } else {
+        toDataURL(file, cb);
+      }
+    });
   }
 
   /* ---------------- importar / exportar ---------------- */
@@ -486,10 +538,12 @@
   }
 
   function init() {
-    state = load();
     wireTopbar();
-    renderAll();
-    setZoom(zoom);
+    loadState().then(function (s) {
+      state = s;
+      renderAll();
+      setZoom(zoom);
+    });
   }
 
   document.addEventListener("DOMContentLoaded", init);
