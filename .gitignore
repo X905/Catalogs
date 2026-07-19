@@ -3,3 +3,7 @@ node_modules/
 !docs/**/*.pdf
 .DS_Store
 Thumbs.db
+
+__pycache__/
+*.pyc
+catalog.json.tmp
