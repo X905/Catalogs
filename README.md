@@ -72,6 +72,40 @@ clic derecho para quitarla.
   escribir en carpetas, la imagen se guarda incrustada dentro del navegador.
   Para que las imágenes queden en la carpeta local, usa el servidor.
 
+## Descargar imágenes automáticamente (scraping)
+
+El script `scrape-images.py` busca en internet (Bing Imágenes, con DuckDuckGo de
+respaldo) la imagen de cada producto por su nombre, descarga la primera imagen
+válida a `assets/img/products/` y la asocia en `catalog.json`. Solo requiere
+Python 3 e internet.
+
+```bash
+# 1) Abre la app con el servidor al menos una vez para crear catalog.json
+python3 server.py         # (ciérralo con Ctrl+C cuando cargue)
+
+# 2) Descarga las imágenes de los productos que aún no tienen
+python3 scrape-images.py
+```
+
+Opciones útiles:
+```bash
+python3 scrape-images.py --all                  # vuelve a bajar todo
+python3 scrape-images.py --only "PANADOL"       # solo una categoría
+python3 scrape-images.py --limit 20             # solo 20 productos
+python3 scrape-images.py --suffix "medicamento" # mejora la búsqueda
+python3 scrape-images.py --dry-run              # muestra qué buscaría, sin bajar
+python3 scrape-images.py --source ddg           # usa DuckDuckGo como principal
+```
+
+Guarda el avance después de cada producto, así que puedes detenerlo y
+retomarlo. Al terminar, **recarga la app** para ver las imágenes.
+
+> Nota importante: las imágenes provienen de búsquedas web y son **orientativas**
+> (pueden no ser exactas o tener derechos de autor). Revisa y reemplaza a mano
+> las que no correspondan; para eso la app muestra "Imágenes con fines
+> ilustrativos" en la versión sin precios. El scraping depende de que los
+> buscadores permitan el acceso; si una fuente falla, prueba con `--source ddg`.
+
 ## Dónde se guardan los datos
 
 | Cómo lo abres | Catálogo (textos/precios) | Imágenes |
@@ -121,6 +155,7 @@ Catalogs/
 ├── index.html              App (editor + previsualización)
 ├── server.py               Servidor local en Python (sin dependencias)
 ├── export-pdf.mjs          Exportador de PDF headless (opcional)
+├── scrape-images.py        Descarga imágenes de productos desde internet
 ├── package.json
 ├── assets/
 │   ├── css/
