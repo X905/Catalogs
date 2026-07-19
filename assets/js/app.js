@@ -78,8 +78,10 @@
   }
 
   var diskTimer = null;
+  var scrapingActive = false; // pausa el guardado a disco mientras se descargan imágenes
   function saveToDiskSoon() { clearTimeout(diskTimer); diskTimer = setTimeout(saveToDisk, 500); }
   function saveToDisk() {
+    if (scrapingActive) return; // no sobrescribir el catálogo mientras el servidor lo actualiza
     fetch("/api/catalog", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -519,6 +521,167 @@
     flashTimer = setTimeout(function () { box.classList.remove("show"); }, 2600);
   }
 
+  /* ============================================================
+     DESCARGA DE IMÁGENES (scraping vía servidor)
+     ============================================================ */
+  var scrapeModal, scrapePoll;
+
+  function buildScrapeModal() {
+    if (scrapeModal) return scrapeModal;
+    var overlay = el("div", "modal-overlay");
+    var panel = el("div", "modal");
+    overlay.appendChild(panel);
+
+    // --- vista de opciones ---
+    var opts = el("div", "modal-opts");
+    opts.appendChild(el("h3", null, "Descargar imágenes"));
+    opts.appendChild(el("p", "modal-desc",
+      "Busca en internet la imagen de cada producto por su nombre y la guarda en assets/img/products/. Las imágenes son orientativas: revísalas después."));
+
+    var g1 = el("div", "field");
+    g1.appendChild(el("label", null, "¿Qué productos?"));
+    var scope = el("select");
+    [["missing", "Solo los que no tienen imagen"], ["all", "Todos (reemplaza las actuales)"]]
+      .forEach(function (o) { var op = el("option", null, o[1]); op.value = o[0]; scope.appendChild(op); });
+    g1.appendChild(scope); opts.appendChild(g1);
+
+    var g2 = el("div", "field");
+    g2.appendChild(el("label", null, "Categoría (opcional, vacío = todas)"));
+    var only = el("select");
+    var anyOpt = el("option", null, "Todas las categorías"); anyOpt.value = ""; only.appendChild(anyOpt);
+    g2.appendChild(only); opts.appendChild(g2);
+
+    var g3 = el("div", "field");
+    g3.appendChild(el("label", null, "Texto extra de búsqueda"));
+    var suffix = el("input"); suffix.value = "medicamento"; g3.appendChild(suffix);
+    opts.appendChild(g3);
+
+    var g4 = el("div", "field");
+    g4.appendChild(el("label", null, "Fuente"));
+    var source = el("select");
+    [["bing", "Bing Imágenes"], ["ddg", "DuckDuckGo"]].forEach(function (o) {
+      var op = el("option", null, o[1]); op.value = o[0]; source.appendChild(op);
+    });
+    g4.appendChild(source); opts.appendChild(g4);
+
+    var actions = el("div", "modal-actions");
+    var cancel = el("button", "btn", "Cancelar");
+    var start = el("button", "btn primary", "Iniciar descarga");
+    actions.appendChild(cancel); actions.appendChild(start);
+    opts.appendChild(actions);
+    panel.appendChild(opts);
+
+    // --- vista de progreso ---
+    var prog = el("div", "modal-prog"); prog.style.display = "none";
+    prog.appendChild(el("h3", null, "Descargando imágenes…"));
+    var barWrap = el("div", "bar-wrap"); var bar = el("div", "bar"); barWrap.appendChild(bar);
+    prog.appendChild(barWrap);
+    var pcount = el("div", "prog-count", ""); prog.appendChild(pcount);
+    var pcur = el("div", "prog-cur", ""); prog.appendChild(pcur);
+    var logBox = el("div", "prog-log"); prog.appendChild(logBox);
+    var pactions = el("div", "modal-actions");
+    var stop = el("button", "btn", "Detener");
+    var close = el("button", "btn primary", "Cerrar"); close.disabled = true;
+    pactions.appendChild(stop); pactions.appendChild(close);
+    prog.appendChild(pactions);
+    panel.appendChild(prog);
+
+    document.body.appendChild(overlay);
+
+    scrapeModal = {
+      overlay: overlay, opts: opts, prog: prog,
+      scope: scope, only: only, suffix: suffix, source: source,
+      bar: bar, pcount: pcount, pcur: pcur, logBox: logBox,
+      start: start, cancel: cancel, stop: stop, close: close
+    };
+
+    cancel.addEventListener("click", closeScrape);
+    close.addEventListener("click", closeScrape);
+    start.addEventListener("click", startScrape);
+    stop.addEventListener("click", function () {
+      stop.disabled = true; stop.textContent = "Deteniendo…";
+      fetch("/api/scrape/stop", { method: "POST" }).catch(function () {});
+    });
+    return scrapeModal;
+  }
+
+  function openScrapeModal() {
+    if (!hasServer()) {
+      flash("Para descargar imágenes abre la app con «python3 server.py».", true);
+      return;
+    }
+    var m = buildScrapeModal();
+    // llena categorías
+    m.only.innerHTML = "";
+    var any = el("option", null, "Todas las categorías"); any.value = ""; m.only.appendChild(any);
+    state.categories.forEach(function (c) {
+      var op = el("option", null, c.name + " (" + c.products.length + ")"); op.value = c.name; m.only.appendChild(op);
+    });
+    m.opts.style.display = ""; m.prog.style.display = "none";
+    m.start.disabled = false; m.close.disabled = true;
+    m.stop.disabled = false; m.stop.textContent = "Detener";
+    m.overlay.classList.add("show");
+  }
+
+  function closeScrape() {
+    if (!scrapeModal) return;
+    clearInterval(scrapePoll);
+    scrapeModal.overlay.classList.remove("show");
+    if (scrapingActive) {
+      // terminó o se cerró: recargar el catálogo desde disco (ya con imágenes)
+      scrapingActive = false;
+      loadState().then(function (s) { state = s; renderAll(); });
+    }
+  }
+
+  function startScrape() {
+    var m = scrapeModal;
+    var opts = {
+      all: m.scope.value === "all",
+      only: m.only.value,
+      suffix: m.suffix.value.trim(),
+      source: m.source.value
+    };
+    m.opts.style.display = "none"; m.prog.style.display = "";
+    m.bar.style.width = "0%"; m.pcount.textContent = "Preparando…";
+    m.pcur.textContent = ""; m.logBox.textContent = "";
+    scrapingActive = true; // pausa el auto-guardado a disco
+
+    // primero asegurar que el catálogo en disco esté al día, luego iniciar
+    fetch("/api/catalog", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(state) })
+      .then(function () {
+        return fetch("/api/scrape", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(opts) });
+      })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (j && j.error) { flash(j.error, true); scrapingActive = false; m.opts.style.display = ""; m.prog.style.display = "none"; return; }
+        scrapePoll = setInterval(pollScrape, 1000);
+      })
+      .catch(function () { flash("No se pudo iniciar la descarga.", true); scrapingActive = false; });
+  }
+
+  function pollScrape() {
+    var m = scrapeModal;
+    fetch("/api/scrape/status", { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (s) {
+      var st = s.state || {};
+      var total = st.total || 0, i = st.i || 0;
+      var pct = total ? Math.round((i / total) * 100) : 0;
+      m.bar.style.width = pct + "%";
+      m.pcount.textContent = i + " / " + total + "  ·  ✓ " + (st.ok || 0) + "   ✗ " + (st.fail || 0);
+      m.pcur.textContent = st.name ? ("Buscando: " + st.name) : "";
+      if (s.log && s.log.length) m.logBox.textContent = s.log.join("\n");
+      m.logBox.scrollTop = m.logBox.scrollHeight;
+      if (!s.running) {
+        clearInterval(scrapePoll);
+        var sum = s.summary || {};
+        m.pcur.textContent = "Listo. Descargadas: " + (sum.ok || 0) + "  ·  Sin imagen: " + (sum.fail || 0);
+        m.stop.disabled = true; m.close.disabled = false;
+        // recargar catálogo desde disco para mostrar las imágenes en la vista
+        loadState().then(function (data) { state = data; renderAll(); });
+      }
+    }).catch(function () { /* seguirá intentando en el próximo tick */ });
+  }
+
   /* ---------------- render global + eventos ---------------- */
   function renderAll() { renderBrandEditor(); renderCatEditor(); renderPreview(); syncPriceSwitch(); }
 
@@ -529,6 +692,7 @@
       state.settings.showPrices = e.target.checked; save(); renderPreview();
     });
     document.getElementById("btnPrint").addEventListener("click", function () { window.print(); });
+    document.getElementById("btnScrape").addEventListener("click", openScrapeModal);
     document.getElementById("btnExport").addEventListener("click", exportJSON);
     document.getElementById("btnImport").addEventListener("click", importJSON);
     document.getElementById("btnReset").addEventListener("click", resetSeed);

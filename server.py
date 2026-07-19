@@ -2,28 +2,33 @@
 """
 Servidor local para el Catálogo de Productos.
 
-Sirve la app y además permite guardar en disco:
-  - Las imágenes de los productos en  assets/img/products/
-  - El catálogo completo en           catalog.json
+Sirve la app y permite guardar en disco:
+  - Imágenes de productos en   assets/img/products/
+  - El catálogo en             catalog.json
 
-Sin dependencias externas (solo la librería estándar de Python).
+Y descargar imágenes desde internet (botón "Descargar imágenes" de la app):
+  - POST /api/scrape           inicia la descarga en segundo plano
+  - GET  /api/scrape/status    progreso
+  - POST /api/scrape/stop      detiene
+
+Sin dependencias externas. Solo escucha en localhost (127.0.0.1).
 
 Uso:
     python3 server.py            # puerto 8000
     python3 server.py 8080       # otro puerto
-
-Solo escucha en localhost (127.0.0.1).
 """
 import http.server
-import socketserver
 import sys
 import os
 import re
 import json
 import uuid
+import threading
 import unicodedata
 import webbrowser
 from urllib.parse import urlparse, parse_qs, unquote
+
+import scraper_core as core
 
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -36,7 +41,11 @@ EXT_BY_MIME = {
     "image/webp": "webp", "image/gif": "gif", "image/svg+xml": "svg",
     "image/avif": "avif", "image/bmp": "bmp",
 }
-MAX_UPLOAD = 20 * 1024 * 1024  # 20 MB por imagen
+MAX_UPLOAD = 20 * 1024 * 1024
+
+# ---- estado compartido de la descarga (scraping) ----
+LOCK = threading.Lock()
+SCRAPE = {"running": False, "stop": False, "state": {}, "log": [], "summary": None}
 
 
 def slugify(text):
@@ -45,11 +54,50 @@ def slugify(text):
     return text or "img"
 
 
+def save_catalog_disk(catalog):
+    tmp = CATALOG_FILE + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(catalog, f, ensure_ascii=False, indent=2)
+    os.replace(tmp, CATALOG_FILE)
+
+
+def run_scrape(opts):
+    def on_prog(st):
+        with LOCK:
+            SCRAPE["state"] = st
+
+    def logf(msg):
+        with LOCK:
+            SCRAPE["log"].append(str(msg))
+            del SCRAPE["log"][:-60]
+
+    def should_stop():
+        return SCRAPE["stop"]
+
+    try:
+        if not os.path.exists(CATALOG_FILE):
+            logf("No hay catalog.json; guarda el catálogo primero.")
+            return
+        with open(CATALOG_FILE, "r", encoding="utf-8") as f:
+            catalog = json.load(f)
+        summary = core.scrape_catalog(
+            catalog, ROOT, IMG_DIR, opts,
+            on_progress=on_prog, should_stop=should_stop,
+            save_fn=save_catalog_disk, log=logf,
+        )
+        with LOCK:
+            SCRAPE["summary"] = summary
+    except Exception as e:  # noqa: BLE001
+        logf("Error: %s" % str(e)[:160])
+    finally:
+        with LOCK:
+            SCRAPE["running"] = False
+
+
 class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=ROOT, **kwargs)
 
-    # --- helpers ---
     def _send_json(self, obj, code=200):
         body = json.dumps(obj).encode("utf-8")
         self.send_response(code)
@@ -62,7 +110,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         length = int(self.headers.get("Content-Length", "0") or "0")
         return self.rfile.read(length) if length else b""
 
-    # --- rutas ---
+    # ----------------------------- GET -----------------------------
     def do_GET(self):
         path = urlparse(self.path).path
         if path == "/api/catalog":
@@ -77,8 +125,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             else:
                 self._send_json({"empty": True})
             return
+        if path == "/api/scrape/status":
+            with LOCK:
+                return self._send_json({
+                    "running": SCRAPE["running"],
+                    "state": SCRAPE["state"],
+                    "log": SCRAPE["log"][-12:],
+                    "summary": SCRAPE["summary"],
+                })
         return super().do_GET()
 
+    # ----------------------------- POST -----------------------------
     def do_POST(self):
         parsed = urlparse(self.path)
         path = parsed.path
@@ -96,7 +153,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             filename = slugify(name) + "-" + uuid.uuid4().hex[:6] + "." + ext
             with open(os.path.join(IMG_DIR, filename), "wb") as f:
                 f.write(data)
-            # borra la imagen anterior si estaba en la carpeta de productos
             if old.startswith("assets/img/products/"):
                 old_abs = os.path.abspath(os.path.join(ROOT, old))
                 if old_abs.startswith(IMG_DIR + os.sep) and os.path.exists(old_abs):
@@ -109,12 +165,31 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if path == "/api/catalog":
             body = self._read_body()
             try:
-                json.loads(body.decode("utf-8"))  # validar que sea JSON
-            except Exception as e:
+                json.loads(body.decode("utf-8"))
+            except Exception as e:  # noqa: BLE001
                 return self._send_json({"error": "JSON inválido: " + str(e)}, 400)
             with open(CATALOG_FILE, "wb") as f:
                 f.write(body)
             return self._send_json({"ok": True})
+
+        if path == "/api/scrape":
+            with LOCK:
+                if SCRAPE["running"]:
+                    return self._send_json({"error": "ya hay una descarga en curso"}, 409)
+            try:
+                opts = json.loads(self._read_body().decode("utf-8") or "{}")
+            except Exception:  # noqa: BLE001
+                opts = {}
+            with LOCK:
+                SCRAPE.update({"running": True, "stop": False, "state": {},
+                               "log": [], "summary": None})
+            threading.Thread(target=run_scrape, args=(opts,), daemon=True).start()
+            return self._send_json({"started": True})
+
+        if path == "/api/scrape/stop":
+            with LOCK:
+                SCRAPE["stop"] = True
+            return self._send_json({"stopping": True})
 
         self.send_error(404, "No encontrado")
 
@@ -123,17 +198,21 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         super().end_headers()
 
     def log_message(self, *args):
-        pass  # silencioso
+        pass
 
 
-socketserver.TCPServer.allow_reuse_address = True
-with socketserver.TCPServer(("127.0.0.1", PORT), Handler) as httpd:
+class Server(http.server.ThreadingHTTPServer):
+    allow_reuse_address = True
+    daemon_threads = True
+
+
+with Server(("127.0.0.1", PORT), Handler) as httpd:
     url = f"http://localhost:{PORT}/index.html"
     print("=" * 56)
     print("  Catálogo de Productos — Hispanic Foods")
     print(f"  Abriendo: {url}")
-    print(f"  Imágenes -> assets/img/products/")
-    print(f"  Catálogo -> catalog.json")
+    print("  Imágenes -> assets/img/products/   Catálogo -> catalog.json")
+    print("  Descargar imágenes: botón en la app (o scrape-images.py)")
     print("  Detén el servidor con Ctrl+C")
     print("=" * 56)
     try:
