@@ -107,14 +107,14 @@ están en el HTML inicial (solo se ve un logo o "mascota" de carga). Para esos, 
 scraper abre la página en un **navegador headless (Chromium)**, espera a que
 carguen las imágenes reales y las extrae.
 
-Requisito (una sola vez):
+Requisito (una sola vez), solo con Python:
 ```bash
-npm install
-npx playwright install chromium
+python -m pip install playwright
+python -m playwright install chromium
 ```
 La farmacia lo activa con `"render": true` en su configuración. **Farmacias
-Batres ya viene así.** (Si no tienes Node/Playwright, el scraper te lo avisa y
-esos sitios quedan sin imágenes, pero los buscadores y los sitios sin JS siguen
+Batres ya viene así.** (Si no tienes Playwright instalado, el scraper te lo avisa
+y esos sitios quedan sin imágenes, pero los buscadores y los sitios sin JS siguen
 funcionando.)
 
 ### Configurar otra farmacia (`pharmacies.json`)

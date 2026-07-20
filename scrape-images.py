@@ -116,7 +116,7 @@ def main():
                 fetch_page = renderer.render
             except Exception as e:
                 print("No se pudo iniciar el navegador: %s" % str(e)[:120])
-                print("Necesitas Node + Playwright: npm install && npx playwright install chromium")
+                print("Instálalo: python -m pip install playwright && python -m playwright install chromium")
         res = core.find_images(source, q, pharmacies, log=lambda m: print(m), fetch_page=fetch_page)
         if renderer:
             renderer.close()

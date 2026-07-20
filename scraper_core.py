@@ -12,8 +12,6 @@ import json
 import time
 import html
 import uuid
-import base64
-import subprocess
 import unicodedata
 import urllib.request
 import urllib.parse
@@ -206,36 +204,66 @@ def _abs_url(u, base):
     return u
 
 
-class Renderer:
-    """Navegador headless persistente (render-server.mjs) para sitios con JS."""
+RENDER_WAIT_JS = (
+    "() => [...document.images].some(i => i.currentSrc && "
+    "!/imagenCarga|page_media|loading|placeholder|sprite|logo/i.test(i.currentSrc) && "
+    "i.naturalWidth > 40)")
 
-    def __init__(self, root, log=None):
+
+class Renderer:
+    """Navegador headless (Playwright para Python) para sitios que cargan con JS.
+
+    Requisito (una vez):
+        python -m pip install playwright
+        python -m playwright install chromium
+    """
+
+    def __init__(self, root, log=None, wait_ms=15000):
         self.log = log or (lambda *_: None)
-        script = os.path.join(root, "render-server.mjs")
-        self.proc = subprocess.Popen(
-            ["node", script], cwd=root,
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-            text=True, bufsize=1)
-        line = self.proc.stdout.readline().strip()
-        if line != "READY":
-            raise RuntimeError("no se pudo iniciar el navegador (¿Node/Playwright instalado?)")
+        self.wait_ms = wait_ms
+        try:
+            from playwright.sync_api import sync_playwright
+        except ImportError:
+            raise RuntimeError(
+                "Falta Playwright para Python. Instálalo con: "
+                "python -m pip install playwright  &&  python -m playwright install chromium")
+        self._pw = sync_playwright().start()
+        opts = {"headless": True}
+        if os.environ.get("CHROMIUM_PATH"):
+            opts["executable_path"] = os.environ["CHROMIUM_PATH"]
+        self.browser = self._pw.chromium.launch(**opts)
+        self.ctx = self.browser.new_context(user_agent=UA, locale="es-GT")
 
     def render(self, url):
-        self.proc.stdin.write(url + "\n")
-        self.proc.stdin.flush()
-        out = self.proc.stdout.readline().strip()
-        if out.startswith("OK "):
-            return base64.b64decode(out[3:]).decode("utf-8", "ignore")
-        self.log("  render falló: %s" % out[4:120])
-        return ""
+        page = self.ctx.new_page()
+        try:
+            page.goto(url, wait_until="domcontentloaded", timeout=30000)
+            try:
+                page.wait_for_function(RENDER_WAIT_JS, timeout=self.wait_ms)
+            except Exception:
+                pass  # seguimos con lo que haya cargado
+            try:
+                page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+            except Exception:
+                pass
+            page.wait_for_timeout(1200)
+            return page.content()
+        except Exception as e:  # noqa: BLE001
+            self.log("  render falló: %s" % str(e)[:100])
+            return ""
+        finally:
+            try:
+                page.close()
+            except Exception:
+                pass
 
     def close(self):
         try:
-            self.proc.stdin.close()
+            self.browser.close()
         except Exception:
             pass
         try:
-            self.proc.terminate()
+            self._pw.stop()
         except Exception:
             pass
 
@@ -449,7 +477,7 @@ def scrape_catalog(catalog, root, img_dir, opts=None, on_progress=None,
             fetch_page = renderer.render
         except Exception as e:  # noqa: BLE001
             log("No se pudo iniciar el navegador: %s" % str(e)[:120])
-            log("Necesitas Node + Playwright: npm install && npx playwright install chromium")
+            log("Instálalo: python -m pip install playwright && python -m playwright install chromium")
 
     os.makedirs(img_dir, exist_ok=True)
     todo = build_todo(catalog, all_, only, limit)
