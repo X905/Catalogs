@@ -109,8 +109,11 @@ def main():
         res = core.find_images(source, q, pharmacies, log=lambda m: print(m))
         if not res:
             print("Sin resultados. Revisa la config del sitio o prueba otra fuente.")
-        for u, t in res[:10]:
-            print("  · %s  %s" % (u[:95], ("[" + t[:50] + "]") if t else ""))
+        print("%d resultado(s):" % len(res))
+        for n, (u, t) in enumerate(res[:15], 1):
+            print("%2d. %s" % (n, u))
+            if t:
+                print("      nombre: %s" % t)
         return
 
     catalog = ensure_catalog(args.catalog)

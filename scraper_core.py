@@ -238,6 +238,15 @@ def _attr(tag, name):
     return m.group(1) if m else ""
 
 
+def _decode_next_image(u):
+    """Next.js sirve imágenes como /_next/image?url=<real-codificada>&w=..&q=..
+    Devuelve la imagen real (así se obtiene la de mejor calidad y se deduplica)."""
+    m = re.search(r"/_next/image\?[^\"']*?url=([^&\"']+)", u)
+    if m:
+        return urllib.parse.unquote(m.group(1))
+    return u
+
+
 def html_search(cfg, query, want=12):
     """Descarga la página de resultados del sitio y extrae (imagen, nombre).
 
@@ -262,20 +271,17 @@ def html_search(cfg, query, want=12):
                 break
         return out
 
-    # Frecuencia de cada URL de imagen en TODA la página (img, scripts, JSON…).
-    # Una imagen que se repite muchas veces suele ser el logo/mascota/placeholder
-    # que la web muestra en cada tarjeta mientras carga el producto real.
-    all_urls = [u.replace("\\/", "/") for u in re.findall(
-        r'https?:\\?/\\?/[^\s"\'<>()\\]+?\.(?:jpg|jpeg|png|webp)(?:\?[^\s"\'<>()\\]*)?', txt, re.I)]
-    freq = {}
-    for u in all_urls:
-        freq[u] = freq.get(u, 0) + 1
+    must = [s.lower() for s in cfg.get("must_contain", []) if s]
+    skip_extra = [s.lower() for s in cfg.get("skip_contains", []) if s]
 
     # 1) pares (url, nombre) desde las etiquetas <img> (con carga diferida)
     lazy_attrs = ("data-src", "data-original", "data-lazy", "data-lazy-src",
                   "data-echo", "data-image", "data-img", "data-thumb", "src")
     pairs, seen = [], set()
     for tag in _IMG_TAG.findall(txt):
+        alt = _attr(tag, "alt")
+        if any(x in alt.lower() for x in _SKIP_IMG):  # p.ej. alt="logo"
+            continue
         src = ""
         for a in lazy_attrs:
             v = _attr(tag, a)
@@ -287,25 +293,35 @@ def html_search(cfg, query, want=12):
             if ss:
                 src = ss.split(",")[0].strip().split(" ")[0]
         if src:
-            u = _abs_url(html.unescape(src), base)
+            u = _decode_next_image(_abs_url(html.unescape(src), base))
             if u.startswith("http") and u not in seen:
                 seen.add(u)
-                pairs.append((u, _attr(tag, "alt")))
-    # 2) además, URLs de imagen que aparezcan en el JSON/scripts (sin nombre)
-    for u in all_urls:
-        if u not in seen:
+                pairs.append((u, alt))
+    # 2) además, URLs de imagen embebidas en JSON/scripts (incluye /_next/image)
+    raw_urls = re.findall(
+        r'https?:\\?/\\?/[^\s"\'<>()\\]+?\.(?:jpg|jpeg|png|webp)(?:\?[^\s"\'<>()\\]*)?', txt, re.I)
+    raw_urls += re.findall(r'/_next/image\?[^\s"\'<>()\\]+', txt)
+    for u in raw_urls:
+        u = _decode_next_image(u.replace("\\/", "/"))
+        if u.startswith("http") and u not in seen:
             seen.add(u)
             pairs.append((u, ""))
 
-    # 3) filtrar logos/íconos y las imágenes repetidas (placeholder/mascota)
+    # 3) frecuencia (una imagen repetida en muchas tarjetas = logo/mascota)
+    freq = {}
+    for u, _ in pairs:
+        freq[u] = freq.get(u, 0) + 1
+
     out = []
     for u, alt in pairs:
         low = u.lower()
-        if any(x in low for x in _SKIP_IMG):
+        if any(x in low for x in _SKIP_IMG) or any(x in low for x in skip_extra):
             continue
         if not re.search(r"\.(jpg|jpeg|png|webp)", low):
             continue
-        if freq.get(u, 1) > 4:  # se repite en muchas tarjetas -> no es un producto
+        if freq.get(u, 1) > 4:            # se repite mucho -> placeholder/logo
+            continue
+        if must and not any(x in low for x in must):  # filtro opcional por ruta
             continue
         out.append((u, alt))
         if len(out) >= want:
