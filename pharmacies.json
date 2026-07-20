@@ -1,0 +1,21 @@
+{
+  "batres": {
+    "label": "Farmacias Batres (Guatemala)",
+    "type": "html",
+    "search_url": "https://farmaciasbatres.com/buscador?search={q}&pag=1",
+    "base": "https://farmaciasbatres.com"
+  },
+
+  "_ejemplo_vtex": {
+    "label": "Ejemplo — farmacia con plataforma VTEX",
+    "type": "vtex",
+    "domain": "www.tu-farmacia.com"
+  },
+  "_ejemplo_html": {
+    "label": "Ejemplo — sitio genérico (HTML)",
+    "type": "html",
+    "search_url": "https://www.tu-farmacia.com/buscar?q={q}",
+    "base": "https://www.tu-farmacia.com",
+    "image_regex": ""
+  }
+}

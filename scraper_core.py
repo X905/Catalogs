@@ -83,6 +83,27 @@ def title_matches(title, tokens):
     return any(tok in nt for tok in tokens)
 
 
+def _score(title, tokens):
+    nt = _norm(title)
+    return sum(1 for tok in tokens if tok in nt)
+
+
+def rank_candidates(candidates, tokens):
+    """Ordena (url,titulo) por relevancia: más palabras coincidentes primero,
+    luego los que no tienen título, al final los que no coinciden."""
+    if not tokens:
+        return list(candidates)
+    matched, unknown, rest = [], [], []
+    for idx, (u, t) in enumerate(candidates):
+        if t:
+            s = _score(t, tokens)
+            (matched if s > 0 else rest).append((s, idx, u, t))
+        else:
+            unknown.append((u, t))
+    matched.sort(key=lambda x: (-x[0], x[1]))
+    return [(u, t) for _, _, u, t in matched] + unknown + [(u, t) for _, _, u, t in rest]
+
+
 # ------------------------- búsqueda de imágenes -------------------------
 # Cada búsqueda devuelve una lista de (url, titulo). El titulo (cuando existe)
 # se usa para filtrar resultados que no correspondan al producto.
@@ -156,7 +177,7 @@ _SEARCHERS = {"bing": search_bing, "google": search_google, "ddg": search_ddg}
 
 
 def search_all(query, primary="bing", log=None):
-    """Combina resultados de varias fuentes (con título cuando esté disponible)."""
+    """Combina resultados de varios buscadores de imágenes (con título si lo hay)."""
     order = [primary] + [s for s in ("bing", "google", "ddg") if s != primary]
     combined = []
     seen = set()
@@ -172,6 +193,127 @@ def search_all(query, primary="bing", log=None):
         if len(combined) >= 20:
             break
     return combined
+
+
+# ------------------------- sitios de farmacia -------------------------
+def _abs_url(u, base):
+    if u.startswith("//"):
+        return "https:" + u
+    if u.startswith("/"):
+        return base.rstrip("/") + u
+    return u
+
+
+def vtex_search(domain, query, want=10):
+    """Farmacias con plataforma VTEX: API pública de catálogo (JSON, fiable)."""
+    url = ("https://%s/api/catalog_system/pub/products/search?ft=%s&_from=0&_to=%d"
+           % (domain, urllib.parse.quote(query), max(0, want - 1)))
+    data, _ = http_get(url, {"User-Agent": UA, "Accept": "application/json",
+                             "Referer": "https://%s/" % domain})
+    arr = json.loads(data.decode("utf-8", "ignore"))
+    out = []
+    for p in arr:
+        name = p.get("productName", "") or ""
+        img = ""
+        for it in p.get("items", []):
+            imgs = it.get("images", [])
+            if imgs:
+                img = imgs[0].get("imageUrl", "") or ""
+                break
+        if img.startswith("http"):
+            out.append((img, name))
+        if len(out) >= want:
+            break
+    return out
+
+
+_IMG_TAG = re.compile(r"<img\b[^>]*>", re.I)
+_SKIP_IMG = ("logo", "sprite", "icon", "placeholder", "banner", "loading", "blank",
+             "no-image", "noimage", "avatar", "flag")
+
+
+def _attr(tag, name):
+    m = (re.search(r'%s\s*=\s*"([^"]*)"' % name, tag, re.I)
+         or re.search(r"%s\s*=\s*'([^']*)'" % name, tag, re.I))
+    return m.group(1) if m else ""
+
+
+def html_search(cfg, query, want=12):
+    """Descarga la página de resultados del sitio y extrae (imagen, nombre).
+
+    Por defecto lee las etiquetas <img> (soporta carga diferida y usa el texto
+    alternativo como nombre). Se puede afinar con 'image_regex' en la config.
+    """
+    base = cfg.get("base", "")
+    url = cfg["search_url"].replace("{q}", urllib.parse.quote(query))
+    page, _ = http_get(url, {"User-Agent": UA, "Accept-Language": "es,en;q=0.8",
+                             "Referer": base + "/" if base else ""})
+    txt = page.decode("utf-8", "ignore")
+
+    # Modo avanzado: regex a medida (captura la URL de imagen).
+    if cfg.get("image_regex"):
+        out, seen = [], set()
+        for u in re.findall(cfg["image_regex"], txt):
+            u = _abs_url(html.unescape(u), base)
+            if u.startswith("http") and u not in seen:
+                seen.add(u)
+                out.append((u, ""))
+            if len(out) >= want:
+                break
+        return out
+
+    # Modo por defecto: analizar cada <img>.
+    out, seen = [], set()
+    for tag in _IMG_TAG.findall(txt):
+        src = (_attr(tag, "data-src") or _attr(tag, "data-original")
+               or _attr(tag, "data-lazy") or _attr(tag, "data-image") or _attr(tag, "src"))
+        if not src:
+            ss = _attr(tag, "srcset")
+            if ss:
+                src = ss.split(",")[0].strip().split(" ")[0]
+        if not src or src.startswith("data:"):
+            continue
+        src = _abs_url(html.unescape(src), base)
+        low = src.lower()
+        if not src.startswith("http") or any(x in low for x in _SKIP_IMG):
+            continue
+        if not re.search(r"\.(jpg|jpeg|png|webp)", low):
+            continue
+        if src in seen:
+            continue
+        seen.add(src)
+        out.append((src, _attr(tag, "alt")))
+        if len(out) >= want:
+            break
+    return out
+
+
+def site_search(cfg, query, log=None):
+    try:
+        if cfg.get("type") == "vtex":
+            return vtex_search(cfg["domain"], query)
+        return html_search(cfg, query)
+    except (URLError, HTTPError, ValueError, TimeoutError, OSError, KeyError) as e:
+        if log:
+            log("  [%s falló: %s]" % (cfg.get("label", "sitio"), str(e)[:80]))
+        return []
+
+
+def find_images(source, query, pharmacies=None, log=None):
+    """Punto de entrada único: buscador de imágenes o sitio de farmacia.
+
+    source: 'bing' | 'google' | 'ddg'  ó  'pharmacy:CLAVE'
+    """
+    pharmacies = pharmacies or {}
+    if source and source.startswith("pharmacy:"):
+        key = source.split(":", 1)[1]
+        cfg = pharmacies.get(key)
+        if not cfg:
+            if log:
+                log("  farmacia no configurada: %s" % key)
+            return []
+        return site_search(cfg, query, log=log)
+    return search_all(query, source or "bing", log=log)
 
 
 # --------------------------- proceso principal ---------------------------
@@ -209,6 +351,8 @@ def scrape_catalog(catalog, root, img_dir, opts=None, on_progress=None,
     delay = float(opts.get("delay", 1.2) or 0)
     tries = int(opts.get("tries", 6) or 6)
     min_bytes = int(opts.get("min_bytes", 2500) or 2500)
+    pharmacies = opts.get("pharmacies") or {}
+    is_site = bool(source) and source.startswith("pharmacy:")
     log = log or (lambda *_: None)
 
     os.makedirs(img_dir, exist_ok=True)
@@ -224,26 +368,23 @@ def scrape_catalog(catalog, root, img_dir, opts=None, on_progress=None,
             log("Detenido por el usuario.")
             break
         name = (p.get("name") or "").strip()
-        query = (name + " " + suffix).strip()
+        # En sitios de farmacia se busca el nombre normalizado (sin el sufijo);
+        # en buscadores de imágenes se añade el sufijo para afinar.
+        query = _norm(name) if is_site else (name + " " + suffix).strip()
         log("[%d/%d] %s" % (i, total, name))
         if on_progress:
             on_progress({"i": i, "total": total, "name": name, "ok": ok, "fail": fail, "status": "searching"})
 
         try:
-            candidates = search_all(query, source, log=log)
+            candidates = find_images(source, query, pharmacies, log=log)
         except Exception as e:  # noqa: BLE001
             candidates = []
             log("  búsqueda falló: %s" % str(e)[:100])
 
-        # Ordena por relevancia: primero los resultados cuyo título coincide con
-        # el nombre del producto; luego los sin título; al final los que no coinciden.
+        # Ordena por relevancia: primero los que más palabras del nombre comparten
+        # con el título; luego los sin título; al final los que no coinciden.
         toks = name_tokens(name)
-        matched = [c for c in candidates if c[1] and title_matches(c[1], toks)]
-        unknown = [c for c in candidates if not c[1]]
-        rest = [c for c in candidates if c[1] and not title_matches(c[1], toks)]
-        ordered = (matched + unknown + rest) if toks else candidates
-        if matched:
-            log("  %d resultado(s) relevante(s)" % len(matched))
+        ordered = rank_candidates(candidates, toks)
 
         saved = False
         for url, _title in ordered[:tries]:

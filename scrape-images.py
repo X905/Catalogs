@@ -35,6 +35,19 @@ import scraper_core as core
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 IMG_DIR = os.path.join(ROOT, "assets", "img", "products")
+PHARMACIES_FILE = os.path.join(ROOT, "pharmacies.json")
+
+
+def load_pharmacies():
+    if not os.path.exists(PHARMACIES_FILE):
+        return {}
+    try:
+        with open(PHARMACIES_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        # las claves que empiezan con "_" son ejemplos/comentarios
+        return {k: v for k, v in data.items() if not k.startswith("_")}
+    except Exception:
+        return {}
 
 
 def ensure_catalog(path):
@@ -73,12 +86,32 @@ def main():
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--suffix", default="")
     ap.add_argument("--source", choices=["bing", "google", "ddg"], default="bing")
+    ap.add_argument("--site", default="", help="Clave de una farmacia de pharmacies.json (p.ej. batres)")
+    ap.add_argument("--probe", default="", help="Prueba una búsqueda y muestra los resultados, sin descargar")
     ap.add_argument("--delay", type=float, default=1.5)
     ap.add_argument("--tries", type=int, default=6)
     ap.add_argument("--min-bytes", type=int, default=2500)
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--catalog", default=os.path.join(ROOT, "catalog.json"))
     args = ap.parse_args()
+
+    pharmacies = load_pharmacies()
+    # fuente efectiva: un sitio de farmacia tiene prioridad sobre el buscador
+    source = ("pharmacy:" + args.site) if args.site else args.source
+    if args.site and args.site not in pharmacies:
+        sys.exit("Farmacia '%s' no está en pharmacies.json. Disponibles: %s"
+                 % (args.site, ", ".join(pharmacies) or "(ninguna)"))
+
+    # Modo prueba: una sola búsqueda, muestra qué encontraría
+    if args.probe:
+        q = core._norm(args.probe) if args.site else args.probe
+        print("Probando \"%s\" en %s…" % (q, args.site or args.source))
+        res = core.find_images(source, q, pharmacies, log=lambda m: print(m))
+        if not res:
+            print("Sin resultados. Revisa la config del sitio o prueba otra fuente.")
+        for u, t in res[:10]:
+            print("  · %s  %s" % (u[:95], ("[" + t[:50] + "]") if t else ""))
+        return
 
     catalog = ensure_catalog(args.catalog)
 
@@ -92,8 +125,9 @@ def main():
 
     opts = {
         "all": args.all, "only": args.only, "limit": args.limit,
-        "suffix": args.suffix, "source": args.source, "delay": args.delay,
+        "suffix": args.suffix, "source": source, "delay": args.delay,
         "tries": args.tries, "min_bytes": args.min_bytes,
+        "pharmacies": pharmacies,
     }
     summary = core.scrape_catalog(
         catalog, ROOT, IMG_DIR, opts,

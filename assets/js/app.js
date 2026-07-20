@@ -617,6 +617,17 @@
     state.categories.forEach(function (c) {
       var op = el("option", null, c.name + " (" + c.products.length + ")"); op.value = c.name; m.only.appendChild(op);
     });
+    // llena fuentes: farmacias configuradas (recomendadas) + buscadores
+    fetch("/api/pharmacies").then(function (r) { return r.json(); }).then(function (phs) {
+      m.source.innerHTML = "";
+      (phs || []).forEach(function (p) {
+        var op = el("option", null, "🏥 " + p.label + "  (recomendado)"); op.value = "pharmacy:" + p.key; m.source.appendChild(op);
+      });
+      [["bing", "Bing Imágenes"], ["google", "Google Imágenes"], ["ddg", "DuckDuckGo"]].forEach(function (o) {
+        var op = el("option", null, o[1]); op.value = o[0]; m.source.appendChild(op);
+      });
+      if (m.source.options.length) m.source.selectedIndex = 0; // farmacia por defecto si hay
+    }).catch(function () {});
     m.opts.style.display = ""; m.prog.style.display = "none";
     m.start.disabled = false; m.close.disabled = true;
     m.stop.disabled = false; m.stop.textContent = "Detener";

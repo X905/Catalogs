@@ -79,11 +79,58 @@ busca en internet la imagen de cada producto por su nombre, elige el resultado
 más relevante, lo descarga a `assets/img/products/` y lo asocia en
 `catalog.json`. Solo requiere Python 3 e internet.
 
-Fuentes disponibles: **Bing Imágenes** (por defecto), **Google Imágenes** y
-**DuckDuckGo**; si una falla se usa otra como respaldo. Para mejorar la
-precisión, el script **filtra por relevancia**: entre los resultados prefiere
-aquellos cuyo título contiene el nombre del producto (así descarta fotos que no
-corresponden).
+### Fuentes
+
+- **Farmacia específica (recomendado):** trae la imagen y el nombre reales
+  directamente del sitio de una farmacia. Es lo más preciso. Viene configurada
+  **Farmacias Batres (Guatemala)**; puedes agregar otras en `pharmacies.json`.
+- **Buscadores de imágenes:** Bing / Google / DuckDuckGo (menos preciso; útil si
+  el producto no está en la farmacia).
+
+En todos los casos el script **filtra y ordena por relevancia**: prefiere los
+resultados cuyo nombre/título comparte más palabras con el producto y descarta
+los que no coinciden.
+
+En la app, el botón **🌐 Descargar imágenes** muestra la farmacia como fuente
+recomendada. Por terminal:
+
+```bash
+python3 scrape-images.py --site batres            # usar Farmacias Batres
+python3 scrape-images.py --site batres --limit 10 # probar con pocos primero
+python3 scrape-images.py --probe "aspirina" --site batres   # ver qué encuentra, sin descargar
+```
+
+### Configurar otra farmacia (`pharmacies.json`)
+
+Edita `pharmacies.json` y agrega una entrada. Hay dos tipos:
+
+```jsonc
+{
+  "mifarmacia": {
+    "label": "Mi Farmacia",
+    "type": "html",                                   // sitio normal
+    "search_url": "https://mifarmacia.com/buscar?q={q}",  // {q} = término
+    "base": "https://mifarmacia.com"
+  },
+  "otra": {
+    "label": "Otra Farmacia",
+    "type": "vtex",                 // si el sitio usa la plataforma VTEX
+    "domain": "www.otrafarmacia.com"
+  }
+}
+```
+
+- `type: "html"` descarga la página de búsqueda y lee las imágenes de producto
+  (usa el texto alternativo como nombre). Si hiciera falta afinar, puedes añadir
+  `"image_regex": "..."` con una expresión que capture la URL de la imagen.
+- `type: "vtex"` usa la API pública de catálogo (muchas farmacias de la región la
+  tienen); solo necesita el `domain`.
+
+Para saber si una farmacia funciona, pruébala sin descargar:
+```bash
+python3 scrape-images.py --probe "acetaminofen" --site mifarmacia
+```
+Las claves que empiezan con `_` en `pharmacies.json` son ejemplos y se ignoran.
 
 ```bash
 # 1) Abre la app con el servidor al menos una vez para crear catalog.json
@@ -166,7 +213,9 @@ Catalogs/
 ├── index.html              App (editor + previsualización)
 ├── server.py               Servidor local en Python (sin dependencias)
 ├── export-pdf.mjs          Exportador de PDF headless (opcional)
-├── scrape-images.py        Descarga imágenes de productos desde internet
+├── scrape-images.py        Descarga imágenes de productos (línea de comandos)
+├── scraper_core.py         Motor de búsqueda/descarga (compartido)
+├── pharmacies.json         Farmacias configuradas para traer imágenes
 ├── package.json
 ├── assets/
 │   ├── css/

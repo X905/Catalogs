@@ -34,7 +34,19 @@ PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
 ROOT = os.path.dirname(os.path.abspath(__file__))
 IMG_DIR = os.path.join(ROOT, "assets", "img", "products")
 CATALOG_FILE = os.path.join(ROOT, "catalog.json")
+PHARMACIES_FILE = os.path.join(ROOT, "pharmacies.json")
 os.makedirs(IMG_DIR, exist_ok=True)
+
+
+def load_pharmacies():
+    if not os.path.exists(PHARMACIES_FILE):
+        return {}
+    try:
+        with open(PHARMACIES_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return {k: v for k, v in data.items() if not k.startswith("_")}
+    except Exception:
+        return {}
 
 EXT_BY_MIME = {
     "image/png": "png", "image/jpeg": "jpg", "image/jpg": "jpg",
@@ -80,6 +92,7 @@ def run_scrape(opts):
             return
         with open(CATALOG_FILE, "r", encoding="utf-8") as f:
             catalog = json.load(f)
+        opts["pharmacies"] = load_pharmacies()
         summary = core.scrape_catalog(
             catalog, ROOT, IMG_DIR, opts,
             on_progress=on_prog, should_stop=should_stop,
@@ -125,6 +138,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             else:
                 self._send_json({"empty": True})
             return
+        if path == "/api/pharmacies":
+            ph = load_pharmacies()
+            return self._send_json([
+                {"key": k, "label": v.get("label", k)} for k, v in ph.items()
+            ])
         if path == "/api/scrape/status":
             with LOCK:
                 return self._send_json({
