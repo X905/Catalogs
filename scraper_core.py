@@ -262,27 +262,52 @@ def html_search(cfg, query, want=12):
                 break
         return out
 
-    # Modo por defecto: analizar cada <img>.
-    out, seen = [], set()
+    # Frecuencia de cada URL de imagen en TODA la página (img, scripts, JSON…).
+    # Una imagen que se repite muchas veces suele ser el logo/mascota/placeholder
+    # que la web muestra en cada tarjeta mientras carga el producto real.
+    all_urls = [u.replace("\\/", "/") for u in re.findall(
+        r'https?:\\?/\\?/[^\s"\'<>()\\]+?\.(?:jpg|jpeg|png|webp)(?:\?[^\s"\'<>()\\]*)?', txt, re.I)]
+    freq = {}
+    for u in all_urls:
+        freq[u] = freq.get(u, 0) + 1
+
+    # 1) pares (url, nombre) desde las etiquetas <img> (con carga diferida)
+    lazy_attrs = ("data-src", "data-original", "data-lazy", "data-lazy-src",
+                  "data-echo", "data-image", "data-img", "data-thumb", "src")
+    pairs, seen = [], set()
     for tag in _IMG_TAG.findall(txt):
-        src = (_attr(tag, "data-src") or _attr(tag, "data-original")
-               or _attr(tag, "data-lazy") or _attr(tag, "data-image") or _attr(tag, "src"))
+        src = ""
+        for a in lazy_attrs:
+            v = _attr(tag, a)
+            if v and not v.startswith("data:"):
+                src = v
+                break
         if not src:
-            ss = _attr(tag, "srcset")
+            ss = _attr(tag, "srcset") or _attr(tag, "data-srcset")
             if ss:
                 src = ss.split(",")[0].strip().split(" ")[0]
-        if not src or src.startswith("data:"):
-            continue
-        src = _abs_url(html.unescape(src), base)
-        low = src.lower()
-        if not src.startswith("http") or any(x in low for x in _SKIP_IMG):
+        if src:
+            u = _abs_url(html.unescape(src), base)
+            if u.startswith("http") and u not in seen:
+                seen.add(u)
+                pairs.append((u, _attr(tag, "alt")))
+    # 2) además, URLs de imagen que aparezcan en el JSON/scripts (sin nombre)
+    for u in all_urls:
+        if u not in seen:
+            seen.add(u)
+            pairs.append((u, ""))
+
+    # 3) filtrar logos/íconos y las imágenes repetidas (placeholder/mascota)
+    out = []
+    for u, alt in pairs:
+        low = u.lower()
+        if any(x in low for x in _SKIP_IMG):
             continue
         if not re.search(r"\.(jpg|jpeg|png|webp)", low):
             continue
-        if src in seen:
+        if freq.get(u, 1) > 4:  # se repite en muchas tarjetas -> no es un producto
             continue
-        seen.add(src)
-        out.append((src, _attr(tag, "alt")))
+        out.append((u, alt))
         if len(out) >= want:
             break
     return out
