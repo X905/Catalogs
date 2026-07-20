@@ -58,11 +58,14 @@ def detect_ext(data, content_type=""):
 
 
 # ------------------------- relevancia por texto -------------------------
+# Solo palabras de ruido (artículos, unidades, empaque). Se CONSERVAN a propósito
+# las que distinguen productos: adulto/niño, forte, jarabe/gel/gotero, y las dosis
+# (500, 600, 800…), para no confundir variantes del mismo medicamento.
 _STOP = set((
-    "de la el los las y con para en un una mg ml grs gr grms gramos unidad unidades "
-    "caja cajas pastilla pastillas tableta tabletas capsula capsulas jarabe gel gotero "
-    "polvo sobre sobres adulto adultos nino ninos frasco frascos botella lata bebible "
-    "inyeccion ampolla paquetes medicamento medicina producto farmacia").split())
+    "de la el los las y o u con para en un una del al x "
+    "mg ml gr grs grms gramos g cc "
+    "unidad unidades caja cajas paquete paquetes "
+    "medicamento medicina producto farmacia").split())
 
 
 def _norm(s):
@@ -71,9 +74,11 @@ def _norm(s):
 
 
 def name_tokens(name):
-    """Palabras significativas del nombre del producto (para medir relevancia)."""
-    toks = [t for t in _norm(name).split() if len(t) >= 4 and t not in _STOP]
-    return toks or [t for t in _norm(name).split() if len(t) >= 3]
+    """Palabras significativas del nombre del producto (para medir relevancia).
+    Conserva palabras de forma/presentación y números de dosis."""
+    toks = [t for t in _norm(name).split()
+            if t not in _STOP and (len(t) >= 3 or t.isdigit())]
+    return toks or _norm(name).split()
 
 
 def title_matches(title, tokens):
@@ -218,7 +223,7 @@ class Renderer:
         python -m playwright install chromium
     """
 
-    def __init__(self, root, log=None, wait_ms=15000):
+    def __init__(self, root, log=None, wait_ms=8000):
         self.log = log or (lambda *_: None)
         self.wait_ms = wait_ms
         try:
