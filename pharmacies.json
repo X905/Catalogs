@@ -2,8 +2,10 @@
   "batres": {
     "label": "Farmacias Batres (Guatemala)",
     "type": "html",
+    "render": true,
     "search_url": "https://farmaciasbatres.com/buscador?search={q}&pag=1",
-    "base": "https://farmaciasbatres.com"
+    "base": "https://farmaciasbatres.com",
+    "skip_contains": ["imagencarga", "page_media"]
   },
 
   "_ejemplo_vtex": {

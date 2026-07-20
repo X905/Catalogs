@@ -12,6 +12,8 @@ import json
 import time
 import html
 import uuid
+import base64
+import subprocess
 import unicodedata
 import urllib.request
 import urllib.parse
@@ -204,6 +206,40 @@ def _abs_url(u, base):
     return u
 
 
+class Renderer:
+    """Navegador headless persistente (render-server.mjs) para sitios con JS."""
+
+    def __init__(self, root, log=None):
+        self.log = log or (lambda *_: None)
+        script = os.path.join(root, "render-server.mjs")
+        self.proc = subprocess.Popen(
+            ["node", script], cwd=root,
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+            text=True, bufsize=1)
+        line = self.proc.stdout.readline().strip()
+        if line != "READY":
+            raise RuntimeError("no se pudo iniciar el navegador (¿Node/Playwright instalado?)")
+
+    def render(self, url):
+        self.proc.stdin.write(url + "\n")
+        self.proc.stdin.flush()
+        out = self.proc.stdout.readline().strip()
+        if out.startswith("OK "):
+            return base64.b64decode(out[3:]).decode("utf-8", "ignore")
+        self.log("  render falló: %s" % out[4:120])
+        return ""
+
+    def close(self):
+        try:
+            self.proc.stdin.close()
+        except Exception:
+            pass
+        try:
+            self.proc.terminate()
+        except Exception:
+            pass
+
+
 def vtex_search(domain, query, want=10):
     """Farmacias con plataforma VTEX: API pública de catálogo (JSON, fiable)."""
     url = ("https://%s/api/catalog_system/pub/products/search?ft=%s&_from=0&_to=%d"
@@ -247,17 +283,23 @@ def _decode_next_image(u):
     return u
 
 
-def html_search(cfg, query, want=12):
+def html_search(cfg, query, want=12, fetch_page=None):
     """Descarga la página de resultados del sitio y extrae (imagen, nombre).
 
     Por defecto lee las etiquetas <img> (soporta carga diferida y usa el texto
     alternativo como nombre). Se puede afinar con 'image_regex' en la config.
+    Si se pasa fetch_page (navegador headless), obtiene el HTML ya renderizado.
     """
     base = cfg.get("base", "")
     url = cfg["search_url"].replace("{q}", urllib.parse.quote(query))
-    page, _ = http_get(url, {"User-Agent": UA, "Accept-Language": "es,en;q=0.8",
-                             "Referer": base + "/" if base else ""})
-    txt = page.decode("utf-8", "ignore")
+    if fetch_page is not None:
+        txt = fetch_page(url)
+    else:
+        page, _ = http_get(url, {"User-Agent": UA, "Accept-Language": "es,en;q=0.8",
+                                 "Referer": base + "/" if base else ""})
+        txt = page.decode("utf-8", "ignore")
+    if not txt:
+        return []
 
     # Modo avanzado: regex a medida (captura la URL de imagen).
     if cfg.get("image_regex"):
@@ -329,18 +371,18 @@ def html_search(cfg, query, want=12):
     return out
 
 
-def site_search(cfg, query, log=None):
+def site_search(cfg, query, log=None, fetch_page=None):
     try:
         if cfg.get("type") == "vtex":
             return vtex_search(cfg["domain"], query)
-        return html_search(cfg, query)
+        return html_search(cfg, query, fetch_page=fetch_page)
     except (URLError, HTTPError, ValueError, TimeoutError, OSError, KeyError) as e:
         if log:
             log("  [%s falló: %s]" % (cfg.get("label", "sitio"), str(e)[:80]))
         return []
 
 
-def find_images(source, query, pharmacies=None, log=None):
+def find_images(source, query, pharmacies=None, log=None, fetch_page=None):
     """Punto de entrada único: buscador de imágenes o sitio de farmacia.
 
     source: 'bing' | 'google' | 'ddg'  ó  'pharmacy:CLAVE'
@@ -353,7 +395,7 @@ def find_images(source, query, pharmacies=None, log=None):
             if log:
                 log("  farmacia no configurada: %s" % key)
             return []
-        return site_search(cfg, query, log=log)
+        return site_search(cfg, query, log=log, fetch_page=fetch_page)
     return search_all(query, source or "bing", log=log)
 
 
@@ -396,6 +438,19 @@ def scrape_catalog(catalog, root, img_dir, opts=None, on_progress=None,
     is_site = bool(source) and source.startswith("pharmacy:")
     log = log or (lambda *_: None)
 
+    # Navegador headless (una sola vez) si la farmacia carga su contenido con JS.
+    site_cfg = pharmacies.get(source.split(":", 1)[1]) if is_site else None
+    renderer = None
+    fetch_page = None
+    if site_cfg and site_cfg.get("render"):
+        try:
+            log("Iniciando navegador (Chromium)…")
+            renderer = Renderer(root, log=log)
+            fetch_page = renderer.render
+        except Exception as e:  # noqa: BLE001
+            log("No se pudo iniciar el navegador: %s" % str(e)[:120])
+            log("Necesitas Node + Playwright: npm install && npx playwright install chromium")
+
     os.makedirs(img_dir, exist_ok=True)
     todo = build_todo(catalog, all_, only, limit)
     total = len(todo)
@@ -417,7 +472,7 @@ def scrape_catalog(catalog, root, img_dir, opts=None, on_progress=None,
             on_progress({"i": i, "total": total, "name": name, "ok": ok, "fail": fail, "status": "searching"})
 
         try:
-            candidates = find_images(source, query, pharmacies, log=log)
+            candidates = find_images(source, query, pharmacies, log=log, fetch_page=fetch_page)
         except Exception as e:  # noqa: BLE001
             candidates = []
             log("  búsqueda falló: %s" % str(e)[:100])
@@ -472,6 +527,9 @@ def scrape_catalog(catalog, root, img_dir, opts=None, on_progress=None,
                          "status": "saved" if saved else "failed"})
         if delay and i < total:
             time.sleep(delay)
+
+    if renderer:
+        renderer.close()
 
     summary = {"total": total, "ok": ok, "fail": fail, "status": "finished"}
     if on_progress:

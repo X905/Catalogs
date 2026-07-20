@@ -7,7 +7,8 @@
     "start": "python3 server.py",
     "serve": "npx --yes serve -l 8000 .",
     "pdf": "node export-pdf.mjs",
-    "pdf:sin-precio": "node export-pdf.mjs --sin-precio"
+    "pdf:sin-precio": "node export-pdf.mjs --sin-precio",
+    "render-server": "node render-server.mjs"
   },
   "devDependencies": {
     "playwright": "^1.44.0"

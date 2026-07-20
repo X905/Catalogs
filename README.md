@@ -100,6 +100,23 @@ python3 scrape-images.py --site batres --limit 10 # probar con pocos primero
 python3 scrape-images.py --probe "aspirina" --site batres   # ver qué encuentra, sin descargar
 ```
 
+### Sitios con JavaScript (como Farmacias Batres)
+
+Algunos sitios cargan sus productos con **JavaScript**, así que sus imágenes no
+están en el HTML inicial (solo se ve un logo o "mascota" de carga). Para esos, el
+scraper abre la página en un **navegador headless (Chromium)**, espera a que
+carguen las imágenes reales y las extrae.
+
+Requisito (una sola vez):
+```bash
+npm install
+npx playwright install chromium
+```
+La farmacia lo activa con `"render": true` en su configuración. **Farmacias
+Batres ya viene así.** (Si no tienes Node/Playwright, el scraper te lo avisa y
+esos sitios quedan sin imágenes, pero los buscadores y los sitios sin JS siguen
+funcionando.)
+
 ### Configurar otra farmacia (`pharmacies.json`)
 
 Edita `pharmacies.json` y agrega una entrada. Hay dos tipos:
@@ -119,6 +136,12 @@ Edita `pharmacies.json` y agrega una entrada. Hay dos tipos:
   }
 }
 ```
+
+Opciones extra para `type: "html"`:
+- `"render": true` — abre la página con navegador (para sitios con JavaScript).
+- `"skip_contains": ["logo", "placeholder"]` — ignora URLs con esos textos.
+- `"must_contain": ["/productos/"]` — solo acepta URLs de imagen con ese texto.
+- `"image_regex": "..."` — expresión propia para capturar la URL de la imagen.
 
 - `type: "html"` descarga la página de búsqueda y lee las imágenes de producto
   (usa el texto alternativo como nombre). Si hiciera falta afinar, puedes añadir

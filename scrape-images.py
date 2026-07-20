@@ -106,7 +106,20 @@ def main():
     if args.probe:
         q = core._norm(args.probe) if args.site else args.probe
         print("Probando \"%s\" en %s…" % (q, args.site or args.source))
-        res = core.find_images(source, q, pharmacies, log=lambda m: print(m))
+        fetch_page = None
+        renderer = None
+        cfg = pharmacies.get(args.site) if args.site else None
+        if cfg and cfg.get("render"):
+            try:
+                print("Iniciando navegador (Chromium)…")
+                renderer = core.Renderer(ROOT, log=lambda m: print(m))
+                fetch_page = renderer.render
+            except Exception as e:
+                print("No se pudo iniciar el navegador: %s" % str(e)[:120])
+                print("Necesitas Node + Playwright: npm install && npx playwright install chromium")
+        res = core.find_images(source, q, pharmacies, log=lambda m: print(m), fetch_page=fetch_page)
+        if renderer:
+            renderer.close()
         if not res:
             print("Sin resultados. Revisa la config del sitio o prueba otra fuente.")
         print("%d resultado(s):" % len(res))
