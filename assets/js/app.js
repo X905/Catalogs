@@ -45,11 +45,17 @@
     return data;
   }
 
-  // ¿Estamos servidos por server.py (http)? Entonces podemos guardar imágenes
-  // y el catálogo como archivos en disco. Si se abrió el archivo directamente
-  // (file://), usamos el almacenamiento del navegador (localStorage).
-  function hasServer() {
-    return location.protocol === "http:" || location.protocol === "https:";
+  // ¿Hay un backend (server.py) detrás? Se detecta al arrancar con un "ping".
+  // Con servidor: imágenes y catálogo se guardan como archivos en disco.
+  // Sin servidor (GitHub Pages, doble-clic): se usa el navegador (localStorage).
+  var serverMode = false;
+  function hasServer() { return serverMode; }
+  function detectServer() {
+    if (location.protocol === "file:") return Promise.resolve(false); // nunca hay servidor
+    return fetch("/api/ping", { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) { return !!(j && j.server === "catalog"); })
+      .catch(function () { return false; });
   }
 
   function loadState() {
@@ -714,7 +720,15 @@
 
   function init() {
     wireTopbar();
-    loadState().then(function (s) {
+    detectServer().then(function (isSrv) {
+      serverMode = isSrv;
+      if (!serverMode) {
+        // Modo estático (GitHub Pages / doble-clic): sin scraping ni disco.
+        var b = document.getElementById("btnScrape");
+        if (b) b.style.display = "none";
+      }
+      return loadState();
+    }).then(function (s) {
       state = s;
       renderAll();
       setZoom(zoom);

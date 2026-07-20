@@ -138,6 +138,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             else:
                 self._send_json({"empty": True})
             return
+        if path == "/api/ping":
+            return self._send_json({"server": "catalog"})
         if path == "/api/pharmacies":
             ph = load_pharmacies()
             return self._send_json([

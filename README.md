@@ -187,6 +187,46 @@ retomarlo. Al terminar, **recarga la app** para ver las imágenes.
 > ilustrativos" en la versión sin precios. El scraping depende de que los
 > buscadores permitan el acceso; si una fuente falla, prueba con `--source ddg`.
 
+## Publicar el catálogo (GitHub Pages)
+
+Puedes publicar el catálogo **con las imágenes ya puestas** para que una
+vendedora lo abra en su navegador y edite productos, precios e imágenes, sin
+necesidad de servidor ni scraping. La app detecta sola dónde corre:
+
+| Dónde | Modo | Guarda en |
+|---|---|---|
+| Tu máquina (`python3 server.py`) | completo | archivos en disco (imágenes + `catalog.json`) |
+| GitHub Pages / doble-clic | estático | el navegador (localStorage) |
+
+En modo estático **no aparece** el botón de descargar imágenes (no hace falta).
+
+### Pasos para publicar
+1. En tu máquina, deja el catálogo como quieres (edita y/o descarga imágenes).
+2. Convierte tus datos actuales en los datos por defecto:
+   ```bash
+   python3 bake-seed.py
+   ```
+   Esto regenera `assets/js/seed.js` a partir de `catalog.json`.
+3. Sube al repositorio el seed y las imágenes:
+   ```bash
+   git add assets/js/seed.js assets/img/products
+   git commit -m "Catálogo con imágenes para publicar"
+   git push
+   ```
+4. En GitHub: **Settings → Pages → Build and deployment → Deploy from a branch**,
+   elige tu rama y la carpeta **/ (root)**, y guarda. En 1-2 minutos tendrás una
+   URL tipo `https://TU-USUARIO.github.io/Catalogs/`.
+
+No necesitas una rama aparte: es el mismo código. (Si prefieres separar el sitio
+publicado del desarrollo, puedes usar una rama dedicada, pero no es obligatorio.)
+
+### Qué contarle a la vendedora
+- Edita en su navegador; **sus cambios se guardan solo en su computadora**
+  (localStorage). En otra computadora o navegador no aparecerán.
+- **«Restablecer al catálogo original»** borra sus cambios y vuelve a lo publicado.
+- Para respaldar su trabajo: **«Exportar JSON»** (y «Importar» para recuperarlo).
+- Puede **Exportar PDF** cuando quiera.
+
 ## Dónde se guardan los datos
 
 | Cómo lo abres | Catálogo (textos/precios) | Imágenes |
@@ -238,6 +278,7 @@ Catalogs/
 ├── export-pdf.mjs          Exportador de PDF headless (opcional)
 ├── scrape-images.py        Descarga imágenes de productos (línea de comandos)
 ├── scraper_core.py         Motor de búsqueda/descarga (compartido)
+├── bake-seed.py            Convierte catalog.json en el seed (para publicar)
 ├── pharmacies.json         Farmacias configuradas para traer imágenes
 ├── package.json
 ├── assets/
