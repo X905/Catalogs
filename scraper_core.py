@@ -57,23 +57,77 @@ def detect_ext(data, content_type=""):
     return None
 
 
+# ------------------------- relevancia por texto -------------------------
+_STOP = set((
+    "de la el los las y con para en un una mg ml grs gr grms gramos unidad unidades "
+    "caja cajas pastilla pastillas tableta tabletas capsula capsulas jarabe gel gotero "
+    "polvo sobre sobres adulto adultos nino ninos frasco frascos botella lata bebible "
+    "inyeccion ampolla paquetes medicamento medicina producto farmacia").split())
+
+
+def _norm(s):
+    s = unicodedata.normalize("NFKD", s or "").encode("ascii", "ignore").decode().lower()
+    return re.sub(r"[^a-z0-9 ]+", " ", s)
+
+
+def name_tokens(name):
+    """Palabras significativas del nombre del producto (para medir relevancia)."""
+    toks = [t for t in _norm(name).split() if len(t) >= 4 and t not in _STOP]
+    return toks or [t for t in _norm(name).split() if len(t) >= 3]
+
+
+def title_matches(title, tokens):
+    if not tokens:
+        return True
+    nt = _norm(title)
+    return any(tok in nt for tok in tokens)
+
+
 # ------------------------- búsqueda de imágenes -------------------------
-def search_bing(query, want=12):
-    url = ("https://www.bing.com/images/search?q=%s&form=HDRSC2&first=1"
-           % urllib.parse.quote(query))
-    page, _ = http_get(url, {"User-Agent": UA, "Accept-Language": "es,en;q=0.8"})
-    text = html.unescape(page.decode("utf-8", "ignore"))
+# Cada búsqueda devuelve una lista de (url, titulo). El titulo (cuando existe)
+# se usa para filtrar resultados que no correspondan al producto.
+
+def search_bing(query, want=40):
+    # Endpoint asíncrono: devuelve SOLO los resultados reales (sin tendencias).
+    url = ("https://www.bing.com/images/async?q=%s&first=0&count=%d&adlt=off&mmasync=1"
+           % (urllib.parse.quote(query), want))
+    page, _ = http_get(url, {"User-Agent": UA, "Accept-Language": "es,en;q=0.8",
+                             "Referer": "https://www.bing.com/images/search"})
+    raw = page.decode("utf-8", "ignore")
     out = []
-    for u in re.findall(r'"murl":"(.*?)"', text):
-        u = u.replace("\\/", "/")
-        if u.startswith("http") and u not in out:
-            out.append(u)
+    for block in re.findall(r'm="({&quot;.*?})"', raw):
+        try:
+            obj = json.loads(html.unescape(block))
+        except ValueError:
+            continue
+        u = obj.get("murl") or obj.get("imgurl")
+        if u and u.startswith("http"):
+            out.append((u, obj.get("t", "") or ""))
         if len(out) >= want:
             break
     return out
 
 
-def search_ddg(query, want=12):
+def search_google(query, want=40):
+    url = ("https://www.google.com/search?q=%s&tbm=isch&hl=es&gl=us&safe=off"
+           % urllib.parse.quote(query))
+    page, _ = http_get(url, {"User-Agent": UA, "Accept-Language": "es,en;q=0.8",
+                             "Cookie": "CONSENT=YES+1"})
+    txt = page.decode("utf-8", "ignore")
+    out = []
+    for u in re.findall(r'\["(https?://[^"\]]+?)",\d+,\d+\]', txt):
+        u = (u.replace("\\u003d", "=").replace("\\u0026", "&").replace("\\/", "/"))
+        low = u.lower()
+        if "gstatic.com" in low or "google.com" in low or low.endswith(".gif"):
+            continue
+        if u.startswith("http") and (u, "") not in out:
+            out.append((u, ""))  # Google no da título fiable
+        if len(out) >= want:
+            break
+    return out
+
+
+def search_ddg(query, want=40):
     home = ("https://duckduckgo.com/?q=%s&iax=images&ia=images"
             % urllib.parse.quote(query))
     page, _ = http_get(home, {"User-Agent": UA})
@@ -91,28 +145,33 @@ def search_ddg(query, want=12):
     out = []
     for r in j.get("results", []):
         u = r.get("image", "")
-        if u.startswith("http") and u not in out:
-            out.append(u)
+        if u.startswith("http"):
+            out.append((u, r.get("title", "") or ""))
         if len(out) >= want:
             break
     return out
 
 
+_SEARCHERS = {"bing": search_bing, "google": search_google, "ddg": search_ddg}
+
+
 def search_all(query, primary="bing", log=None):
-    order = [primary] + [s for s in ("bing", "ddg") if s != primary]
-    urls = []
+    """Combina resultados de varias fuentes (con título cuando esté disponible)."""
+    order = [primary] + [s for s in ("bing", "google", "ddg") if s != primary]
+    combined = []
+    seen = set()
     for src in order:
         try:
-            found = (search_bing if src == "bing" else search_ddg)(query)
-            for u in found:
-                if u not in urls:
-                    urls.append(u)
-            if urls:
-                break
+            for u, t in _SEARCHERS[src](query):
+                if u not in seen:
+                    seen.add(u)
+                    combined.append((u, t))
         except (URLError, HTTPError, ValueError, TimeoutError, OSError) as e:
             if log:
                 log("  [%s falló: %s]" % (src, str(e)[:80]))
-    return urls
+        if len(combined) >= 20:
+            break
+    return combined
 
 
 # --------------------------- proceso principal ---------------------------
@@ -148,7 +207,7 @@ def scrape_catalog(catalog, root, img_dir, opts=None, on_progress=None,
     suffix = opts.get("suffix", "") or ""
     source = opts.get("source", "bing") or "bing"
     delay = float(opts.get("delay", 1.2) or 0)
-    tries = int(opts.get("tries", 4) or 4)
+    tries = int(opts.get("tries", 6) or 6)
     min_bytes = int(opts.get("min_bytes", 2500) or 2500)
     log = log or (lambda *_: None)
 
@@ -176,8 +235,18 @@ def scrape_catalog(catalog, root, img_dir, opts=None, on_progress=None,
             candidates = []
             log("  búsqueda falló: %s" % str(e)[:100])
 
+        # Ordena por relevancia: primero los resultados cuyo título coincide con
+        # el nombre del producto; luego los sin título; al final los que no coinciden.
+        toks = name_tokens(name)
+        matched = [c for c in candidates if c[1] and title_matches(c[1], toks)]
+        unknown = [c for c in candidates if not c[1]]
+        rest = [c for c in candidates if c[1] and not title_matches(c[1], toks)]
+        ordered = (matched + unknown + rest) if toks else candidates
+        if matched:
+            log("  %d resultado(s) relevante(s)" % len(matched))
+
         saved = False
-        for url in candidates[:tries]:
+        for url, _title in ordered[:tries]:
             if should_stop and should_stop():
                 break
             try:

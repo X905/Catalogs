@@ -559,7 +559,7 @@
     var g4 = el("div", "field");
     g4.appendChild(el("label", null, "Fuente"));
     var source = el("select");
-    [["bing", "Bing Imágenes"], ["ddg", "DuckDuckGo"]].forEach(function (o) {
+    [["bing", "Bing Imágenes"], ["google", "Google Imágenes"], ["ddg", "DuckDuckGo"]].forEach(function (o) {
       var op = el("option", null, o[1]); op.value = o[0]; source.appendChild(op);
     });
     g4.appendChild(source); opts.appendChild(g4);

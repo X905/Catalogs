@@ -74,10 +74,16 @@ clic derecho para quitarla.
 
 ## Descargar imágenes automáticamente (scraping)
 
-El script `scrape-images.py` busca en internet (Bing Imágenes, con DuckDuckGo de
-respaldo) la imagen de cada producto por su nombre, descarga la primera imagen
-válida a `assets/img/products/` y la asocia en `catalog.json`. Solo requiere
-Python 3 e internet.
+El script `scrape-images.py` (o el botón **🌐 Descargar imágenes** de la app)
+busca en internet la imagen de cada producto por su nombre, elige el resultado
+más relevante, lo descarga a `assets/img/products/` y lo asocia en
+`catalog.json`. Solo requiere Python 3 e internet.
+
+Fuentes disponibles: **Bing Imágenes** (por defecto), **Google Imágenes** y
+**DuckDuckGo**; si una falla se usa otra como respaldo. Para mejorar la
+precisión, el script **filtra por relevancia**: entre los resultados prefiere
+aquellos cuyo título contiene el nombre del producto (así descarta fotos que no
+corresponden).
 
 ```bash
 # 1) Abre la app con el servidor al menos una vez para crear catalog.json
@@ -94,8 +100,13 @@ python3 scrape-images.py --only "PANADOL"       # solo una categoría
 python3 scrape-images.py --limit 20             # solo 20 productos
 python3 scrape-images.py --suffix "medicamento" # mejora la búsqueda
 python3 scrape-images.py --dry-run              # muestra qué buscaría, sin bajar
+python3 scrape-images.py --source google        # usa Google Imágenes
 python3 scrape-images.py --source ddg           # usa DuckDuckGo como principal
 ```
+
+Si un producto queda con una imagen equivocada, reemplázala a mano (clic en su
+miniatura en el editor) o vuelve a intentarlo cambiando la fuente o el texto de
+búsqueda (`--suffix "caja farmacia"`, por ejemplo).
 
 Guarda el avance después de cada producto, así que puedes detenerlo y
 retomarlo. Al terminar, **recarga la app** para ver las imágenes.
