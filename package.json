@@ -10,7 +10,7 @@
     "pdf:sin-precio": "node export-pdf.mjs --sin-precio",
     "render-server": "node render-server.mjs"
   },
-  "devDependencies": {
+  "dependencies": {
     "playwright": "^1.44.0"
   }
 }
