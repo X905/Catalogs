@@ -194,9 +194,10 @@
       banner.appendChild(el("div", "t", cat.name));
       banner.appendChild(el("div", "n", total + (total === 1 ? " producto" : " productos")));
       inner.appendChild(banner);
-      var note = el("div", "illus-note" + (state.settings.showPrices ? " hidden" : ""),
-        state.brand.illustrativeNote || "");
-      inner.appendChild(note);
+      // La nota se muestra siempre (con o sin precios).
+      if (state.brand.illustrativeNote) {
+        inner.appendChild(el("div", "illus-note", state.brand.illustrativeNote));
+      }
     }
 
     var grid = el("div", "grid");
@@ -245,7 +246,7 @@
       ["address", "Dirección"],
       ["phone", "Teléfono"],
       ["email", "Correo"],
-      ["illustrativeNote", "Nota (modo sin precios)"]
+      ["illustrativeNote", "Nota bajo el banner"]
     ];
     fields.forEach(function (f) {
       var wrap = el("div", "field");
