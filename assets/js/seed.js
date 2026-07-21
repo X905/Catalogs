@@ -13,7 +13,7 @@ window.CATALOG_SEED = {
     "illustrativeNote": "Imágenes con fines ilustrativos"
   },
   "settings": {
-    "showPrices": false,
+    "showPrices": true,
     "currency": "$"
   },
   "categories": [
@@ -62,7 +62,7 @@ window.CATALOG_SEED = {
           "name": "ASPIRINA NIÑO",
           "price": "25.00",
           "id": "p-q6c63cl",
-          "image": "assets/img/products/aspirina-nino-d81928.jpg"
+          "image": "assets/img/products/aspirina-nino-72c800.webp"
         },
         {
           "name": "BARALGINA",
@@ -86,7 +86,7 @@ window.CATALOG_SEED = {
           "name": "CARDIO ASPIRINA",
           "price": "22.00",
           "id": "p-nkhftni",
-          "image": "assets/img/products/cardio-aspirina-38cf30.jpg"
+          "image": "assets/img/products/cardio-aspirina-59b797.webp"
         },
         {
           "name": "CEREBREX",
@@ -98,13 +98,13 @@ window.CATALOG_SEED = {
           "name": "CEREBREX MICRO BOTELLA",
           "price": "17.00",
           "id": "p-ehn9xf4",
-          "image": "assets/img/products/cerebrex-micro-botella-540673.jpg"
+          "image": "assets/img/products/cerebrex-micro-botella-91c668.webp"
         },
         {
           "name": "DICLOFENACO + NEUROTROPAS",
           "price": "50.00",
           "id": "p-t13qjha",
-          "image": "assets/img/products/diclofenaco-neurotropas-8b7344.jpg"
+          "image": "assets/img/products/diclofenaco-neurotropas-b1db21.webp"
         },
         {
           "name": "DICLOFENACO POTÁSICO",
@@ -134,25 +134,25 @@ window.CATALOG_SEED = {
           "name": "DKC ADULTO AMPOLLA",
           "price": "15.00",
           "id": "p-cc5123b",
-          "image": "assets/img/products/dkc-adulto-ampolla-029b64.jpg"
+          "image": "assets/img/products/dkc-adulto-ampolla-1c1127.jpg"
         },
         {
           "name": "DKC NIÑO AMPOLLA",
           "price": "15.00",
           "id": "p-1cngjmk",
-          "image": "assets/img/products/dkc-nino-ampolla-58404d.jpg"
+          "image": "assets/img/products/dkc-nino-ampolla-a1ce4d.jpg"
         },
         {
           "name": "DOLO ULTRA ESTRÉS",
           "price": "18.00",
           "id": "p-e95q2yn",
-          "image": "assets/img/products/dolo-ultra-estres-d93dea.jpg"
+          "image": "assets/img/products/dolo-ultra-estres-88c1a8.jpg"
         },
         {
           "name": "DOLO ULTRA ESTRÉS PASTILLA",
           "price": "32.00",
           "id": "p-98xbux6",
-          "image": "assets/img/products/dolo-ultra-estres-pastilla-d78f52.jpg"
+          "image": "assets/img/products/dolo-ultra-estres-pastilla-63935a.jpg"
         },
         {
           "name": "DOLOFIN",
@@ -164,25 +164,25 @@ window.CATALOG_SEED = {
           "name": "DOLONEUROBIÓN INYECCIÓN",
           "price": "25.00",
           "id": "p-r6euqyk",
-          "image": "assets/img/products/doloneurobion-inyeccion-e75913.jpg"
+          "image": "assets/img/products/doloneurobion-inyeccion-02321f.webp"
         },
         {
           "name": "DOLONEUROBIÓN N",
           "price": "25.00",
           "id": "p-ncm3u3u",
-          "image": "assets/img/products/doloneurobion-n-acc0a3.jpg"
+          "image": "assets/img/products/doloneurobion-n-436c92.jpg"
         },
         {
           "name": "DOLONEUROBIÓN PASTILLAS",
           "price": "55.00",
           "id": "p-rls96ay",
-          "image": "assets/img/products/doloneurobion-pastillas-ea2a61.jpg"
+          "image": "assets/img/products/doloneurobion-pastillas-bab482.webp"
         },
         {
           "name": "DOLONEUROTROPAS",
           "price": "45.00",
           "id": "p-6f47n2o",
-          "image": "assets/img/products/doloneurotropas-239ae6.jpg"
+          "image": "assets/img/products/doloneurotropas-1d32de.jpg"
         },
         {
           "name": "DORIVAL GEL",
@@ -230,19 +230,19 @@ window.CATALOG_SEED = {
           "name": "KETEROLACO",
           "price": "12.00",
           "id": "p-2wbo2vw",
-          "image": "assets/img/products/keterolaco-5fbf7f.jpg"
+          "image": "assets/img/products/keterolaco-924d4b.jpg"
         },
         {
           "name": "NEOMELUBRINA JARABE",
           "price": "Consultar precio",
           "id": "p-4kf58vd",
-          "image": "assets/img/products/neomelubrina-jarabe-1b6783.jpg"
+          "image": "assets/img/products/neomelubrina-jarabe-e59677.jpg"
         },
         {
           "name": "NEOMELUBRINA PASTILLA",
           "price": "40.00",
           "id": "p-coup2zj",
-          "image": "assets/img/products/neomelubrina-pastilla-29ad1f.jpg"
+          "image": "assets/img/products/neomelubrina-pastilla-9bf183.jpg"
         },
         {
           "name": "SEDALGINA",
@@ -254,13 +254,13 @@ window.CATALOG_SEED = {
           "name": "TRAMADOL",
           "price": "Consultar precio",
           "id": "p-ydzeo5f",
-          "image": "assets/img/products/tramadol-3db990.jpg"
+          "image": "assets/img/products/tramadol-bebe23.webp"
         },
         {
           "name": "VITAFLENACO",
           "price": "14.00",
           "id": "p-45p67r8",
-          "image": "assets/img/products/vitaflenaco-6dea07.jpg"
+          "image": "assets/img/products/vitaflenaco-b1b1a5.webp"
         },
         {
           "name": "VITAFLENACO EN GEL",
@@ -279,7 +279,7 @@ window.CATALOG_SEED = {
           "name": "PANADOL AZUL",
           "price": "35.00",
           "id": "p-efvomfj",
-          "image": "assets/img/products/panadol-azul-7099e9.jpg"
+          "image": "assets/img/products/panadol-azul-160982.jpg"
         },
         {
           "name": "PANADOL DÍA",
@@ -303,7 +303,7 @@ window.CATALOG_SEED = {
           "name": "PANADOL NIÑO PASTILLA",
           "price": "37.00",
           "id": "p-4x6bpdz",
-          "image": "assets/img/products/panadol-nino-pastilla-95b098.jpg"
+          "image": "assets/img/products/panadol-nino-pastilla-93f05d.jpg"
         },
         {
           "name": "PANADOL NIÑO JARABE",
@@ -321,7 +321,7 @@ window.CATALOG_SEED = {
           "name": "PANADOL ROJO",
           "price": "35.00",
           "id": "p-4jh5luu",
-          "image": "assets/img/products/panadol-rojo-5e0352.jpg"
+          "image": "assets/img/products/panadol-rojo-745da1.png"
         },
         {
           "name": "PANADOL SINUS",
@@ -340,49 +340,49 @@ window.CATALOG_SEED = {
           "name": "TABCIN AZUL EN GEL",
           "price": "25.00",
           "id": "p-4vyenlv",
-          "image": "assets/img/products/tabcin-azul-en-gel-e44baf.jpg"
+          "image": "assets/img/products/tabcin-azul-en-gel-97764b.jpg"
         },
         {
           "name": "TABCIN CELESTE",
           "price": "25.00",
           "id": "p-yiqzl3t",
-          "image": "assets/img/products/tabcin-celeste-c3edad.jpg"
+          "image": "assets/img/products/tabcin-celeste-371eef.jpg"
         },
         {
           "name": "TABCIN FLEMA Y CONGESTIÓN",
           "price": "25.00",
           "id": "p-60efv3u",
-          "image": "assets/img/products/tabcin-flema-y-congestion-399513.jpg"
+          "image": "assets/img/products/tabcin-flema-y-congestion-dcaff4.jpg"
         },
         {
           "name": "TABCIN MORADO EFERVESCENTE",
           "price": "25.00",
           "id": "p-bxdpkua",
-          "image": "assets/img/products/tabcin-morado-efervescente-8214fe.jpg"
+          "image": "assets/img/products/tabcin-morado-efervescente-a7c659.webp"
         },
         {
           "name": "TABCIN MORADO GEL",
           "price": "25.00",
           "id": "p-vv5hydj",
-          "image": "assets/img/products/tabcin-morado-gel-6d3258.jpg"
+          "image": "assets/img/products/tabcin-morado-gel-43fbe8.jpg"
         },
         {
           "name": "TABCIN NIÑO",
           "price": "25.00",
           "id": "p-4rti7dw",
-          "image": "assets/img/products/tabcin-nino-78e43d.jpg"
+          "image": "assets/img/products/tabcin-nino-14ea8e.jpg"
         },
         {
           "name": "TABCIN ROJO",
           "price": "25.00",
           "id": "p-wd5vwqf",
-          "image": "assets/img/products/tabcin-rojo-828ab6.jpg"
+          "image": "assets/img/products/tabcin-rojo-b972e9.webp"
         },
         {
           "name": "TABCIN VERDE GEL",
           "price": "25.00",
           "id": "p-zqvohik",
-          "image": "assets/img/products/tabcin-verde-gel-122d16.jpg"
+          "image": "assets/img/products/tabcin-verde-gel-14c8e9.avif"
         }
       ]
     },
@@ -401,7 +401,7 @@ window.CATALOG_SEED = {
           "name": "VICK 44 NIÑO FRASCO",
           "price": "10.75",
           "id": "p-hfqcnx8",
-          "image": "assets/img/products/vick-44-nino-frasco-997600.jpg"
+          "image": "assets/img/products/vick-44-nino-frasco-708468.jpg"
         },
         {
           "name": "VICK DROPS PASTILLAS",
@@ -432,31 +432,31 @@ window.CATALOG_SEED = {
           "name": "VIROGRIP DÍA GEL",
           "price": "25.00",
           "id": "p-5pqtwdn",
-          "image": "assets/img/products/virogrip-dia-gel-18fe5b.jpg"
+          "image": "assets/img/products/virogrip-dia-gel-bc3a6f.webp"
         },
         {
           "name": "VIROGRIP DÍA POLVO",
           "price": "25.00",
           "id": "p-udo7lae",
-          "image": "assets/img/products/virogrip-dia-polvo-c89d4e.jpg"
+          "image": "assets/img/products/virogrip-dia-polvo-d42add.jpg"
         },
         {
           "name": "VIROGRIP JARABE UNIDADES",
           "price": "12.00",
           "id": "p-yvg2go0",
-          "image": "assets/img/products/virogrip-jarabe-unidades-0ddbea.jpg"
+          "image": "assets/img/products/virogrip-jarabe-unidades-cd155f.avif"
         },
         {
           "name": "VIROGRIP NOCHE GEL",
           "price": "25.00",
           "id": "p-d6xb9as",
-          "image": "assets/img/products/virogrip-noche-gel-e7c03e.jpg"
+          "image": "assets/img/products/virogrip-noche-gel-311ae6.webp"
         },
         {
           "name": "VIROGRIP NOCHE POLVO",
           "price": "25.00",
           "id": "p-41cml1c",
-          "image": "assets/img/products/virogrip-noche-polvo-c6f14f.jpg"
+          "image": "assets/img/products/virogrip-noche-polvo-c853ec.jpg"
         }
       ]
     },
@@ -469,25 +469,25 @@ window.CATALOG_SEED = {
           "name": "SUDAGRIP PASTILLA",
           "price": "25.00",
           "id": "p-hd58dz8",
-          "image": "assets/img/products/sudagrip-pastilla-3f8486.jpg"
+          "image": "assets/img/products/sudagrip-pastilla-c5c559.webp"
         },
         {
           "name": "SUDAGRIP POLVO",
           "price": "25.00",
           "id": "p-q4mh3q5",
-          "image": "assets/img/products/sudagrip-polvo-6bc783.jpg"
+          "image": "assets/img/products/sudagrip-polvo-916064.png"
         },
         {
           "name": "SUDAGRIP JARABE NIÑO",
           "price": "12.00",
           "id": "p-7e70t1d",
-          "image": "assets/img/products/sudagrip-jarabe-nino-03992e.jpg"
+          "image": "assets/img/products/sudagrip-jarabe-nino-205a4c.jpg"
         },
         {
           "name": "SUDAGRIP JARABE ADULTO",
           "price": "12.00",
           "id": "p-1yl5r6r",
-          "image": "assets/img/products/sudagrip-jarabe-adulto-aeb077.jpg"
+          "image": "assets/img/products/sudagrip-jarabe-adulto-03c8ef.jpg"
         }
       ]
     },
@@ -500,19 +500,19 @@ window.CATALOG_SEED = {
           "name": "ANTIGRIP",
           "price": "32.00",
           "id": "p-c8wgpfz",
-          "image": "assets/img/products/antigrip-7cc1d9.jpg"
+          "image": "assets/img/products/antigrip-ba2a84.jpg"
         },
         {
           "name": "ANTIGRIPITO PASTILLA",
           "price": "30.00",
           "id": "p-5srsrbx",
-          "image": "assets/img/products/antigripito-pastilla-86d308.jpg"
+          "image": "assets/img/products/antigripito-pastilla-1313d5.webp"
         },
         {
           "name": "ANTIGRIPITO JARABE",
           "price": "12.00",
           "id": "p-zq2k03z",
-          "image": "assets/img/products/antigripito-jarabe-db4296.jpg"
+          "image": "assets/img/products/antigripito-jarabe-7be318.webp"
         },
         {
           "name": "CLOROMILAN",
@@ -524,13 +524,13 @@ window.CATALOG_SEED = {
           "name": "DESENFRIOL ADULTO",
           "price": "15.00",
           "id": "p-eu3ca9a",
-          "image": "assets/img/products/desenfriol-adulto-264fa6.jpg"
+          "image": "assets/img/products/desenfriol-adulto-56afaa.avif"
         },
         {
           "name": "DESENFRIOLITO NIÑO",
           "price": "15.00",
           "id": "p-b86wxas",
-          "image": "assets/img/products/desenfriolito-nino-00ae26.jpg"
+          "image": "assets/img/products/desenfriolito-nino-7b655d.avif"
         },
         {
           "name": "FÓRMULA 44 ADULTOS",
@@ -548,25 +548,25 @@ window.CATALOG_SEED = {
           "name": "GRIPON C",
           "price": "35.00",
           "id": "p-qzfurta",
-          "image": "assets/img/products/gripon-c-673526.jpg"
+          "image": "assets/img/products/gripon-c-1b8c5d.jpg"
         },
         {
           "name": "GRIPONCITO",
           "price": "35.00",
           "id": "p-vglty08",
-          "image": "assets/img/products/griponcito-45dde4.jpg"
+          "image": "assets/img/products/griponcito-2384aa.webp"
         },
         {
           "name": "KOLD GRIP GOTERO",
           "price": "12.00",
           "id": "p-x66lqwk",
-          "image": "assets/img/products/kold-grip-gotero-bb670b.jpg"
+          "image": "assets/img/products/kold-grip-gotero-c7adfc.webp"
         },
         {
           "name": "LORATADINA JARABE",
           "price": "12.00",
           "id": "p-79jhbwf",
-          "image": "assets/img/products/loratadina-jarabe-449635.jpg"
+          "image": "assets/img/products/loratadina-jarabe-98b338.jpg"
         },
         {
           "name": "NEUMONIL FORTE",
@@ -578,19 +578,19 @@ window.CATALOG_SEED = {
           "name": "NEUMONIL VERDE",
           "price": "24.50",
           "id": "p-8vvrsgj",
-          "image": "assets/img/products/neumonil-verde-7411f3.jpg"
+          "image": "assets/img/products/neumonil-verde-2c7627.jpg"
         },
         {
           "name": "PULMO FEROL",
           "price": "Consultar precio",
           "id": "p-2zpdirt",
-          "image": "assets/img/products/pulmo-ferol-19ce35.jpg"
+          "image": "assets/img/products/pulmo-ferol-2a15e7.jpg"
         },
         {
           "name": "VITAPIRENA",
           "price": "40.00",
           "id": "p-vroduv2",
-          "image": "assets/img/products/vitapirena-1a1dcb.jpg"
+          "image": "assets/img/products/vitapirena-b2cee4.jpg"
         }
       ]
     },
@@ -609,25 +609,25 @@ window.CATALOG_SEED = {
           "name": "ALKA SELTZER",
           "price": "25.00",
           "id": "p-oxlnls0",
-          "image": "assets/img/products/alka-seltzer-b24c20.jpg"
+          "image": "assets/img/products/alka-seltzer-9d9bb3.png"
         },
         {
           "name": "ALKA SELTZER NEGRA",
           "price": "25.00",
           "id": "p-qhb2r4w",
-          "image": "assets/img/products/alka-seltzer-negra-a2664f.jpg"
+          "image": "assets/img/products/alka-seltzer-negra-93146b.jpg"
         },
         {
           "name": "BICARBONATO PAQUETES",
           "price": "32.00",
           "id": "p-ro4pmai",
-          "image": "assets/img/products/bicarbonato-paquetes-0e2296.jpg"
+          "image": "assets/img/products/bicarbonato-paquetes-94ae66.jpg"
         },
         {
           "name": "BISMUTO COMPUESTO PAQUETES",
           "price": "30.00",
           "id": "p-jjxwgjy",
-          "image": "assets/img/products/bismuto-compuesto-paquetes-79b51c.jpg"
+          "image": "assets/img/products/bismuto-compuesto-paquetes-f58945.jpg"
         },
         {
           "name": "CITRATO DE MAGNESIA PAQUETES",
@@ -639,7 +639,7 @@ window.CATALOG_SEED = {
           "name": "CUAJO MARSHALL",
           "price": "Consultar precio",
           "id": "p-wfzpce0",
-          "image": "assets/img/products/cuajo-marshall-d30d6a.jpg"
+          "image": "assets/img/products/cuajo-marshall-287c39.webp"
         },
         {
           "name": "DONOFLAT PLUS BLISTER",
@@ -651,13 +651,13 @@ window.CATALOG_SEED = {
           "name": "ENTEROGUANIL ADULTO",
           "price": "30.00",
           "id": "p-trxsdpz",
-          "image": "assets/img/products/enteroguanil-adulto-2bf814.jpg"
+          "image": "assets/img/products/enteroguanil-adulto-49fb55.jpg"
         },
         {
           "name": "ENTEROGUANIL NIÑO",
           "price": "30.00",
           "id": "p-0zdphsk",
-          "image": "assets/img/products/enteroguanil-nino-33f54b.jpg"
+          "image": "assets/img/products/enteroguanil-nino-03ca27.jpg"
         },
         {
           "name": "ESTOMICINA EN SOBRE x50",
@@ -669,13 +669,13 @@ window.CATALOG_SEED = {
           "name": "ESTOMICINA PASTILLA",
           "price": "22.00",
           "id": "p-qrarwjr",
-          "image": "assets/img/products/estomicina-pastilla-38f856.jpg"
+          "image": "assets/img/products/estomicina-pastilla-fa70e7.jpg"
         },
         {
           "name": "LANSOPRAZOL",
           "price": "10.00",
           "id": "p-43woalx",
-          "image": "assets/img/products/lansoprazol-ca210f.jpg"
+          "image": "assets/img/products/lansoprazol-a5bf50.jpg"
         },
         {
           "name": "MAGNESIA THERFAM",
@@ -699,13 +699,13 @@ window.CATALOG_SEED = {
           "name": "OMEPRAZOL PASTILLA",
           "price": "45.00",
           "id": "p-fxzfe2q",
-          "image": "assets/img/products/omeprazol-pastilla-45da93.jpg"
+          "image": "assets/img/products/omeprazol-pastilla-0858b2.jpg"
         },
         {
           "name": "PEPTO BISMOL UNIDADES",
           "price": "Consultar precio",
           "id": "p-j15h2pj",
-          "image": "assets/img/products/pepto-bismol-unidades-33f327.jpg"
+          "image": "assets/img/products/pepto-bismol-unidades-72281a.png"
         },
         {
           "name": "SAL ANDREWS",
@@ -717,13 +717,13 @@ window.CATALOG_SEED = {
           "name": "SAL DE UVAS PICOT",
           "price": "20.00",
           "id": "p-jx22n91",
-          "image": "assets/img/products/sal-de-uvas-picot-8d7099.jpg"
+          "image": "assets/img/products/sal-de-uvas-picot-3dbc1a.jpg"
         },
         {
           "name": "SAL INGLESA PAQUETES",
           "price": "22.00",
           "id": "p-5kb8wa8",
-          "image": "assets/img/products/sal-inglesa-paquetes-8d97d5.jpg"
+          "image": "assets/img/products/sal-inglesa-paquetes-b8dedd.jpg"
         },
         {
           "name": "SERTAL COMPUESTA BLISTER",
@@ -772,7 +772,7 @@ window.CATALOG_SEED = {
           "name": "ARTRIBION",
           "price": "38.00",
           "id": "p-9ypblkh",
-          "image": "assets/img/products/artribion-d821dc.jpg"
+          "image": "assets/img/products/artribion-f1940d.jpg"
         },
         {
           "name": "BACAOLINA",
@@ -784,7 +784,7 @@ window.CATALOG_SEED = {
           "name": "CALCIO + B12",
           "price": "Consultar precio",
           "id": "p-kahh542",
-          "image": "assets/img/products/calcio-b12-bb4398.jpg"
+          "image": "assets/img/products/calcio-b12-e0c4fc.jpg"
         },
         {
           "name": "CARDIO VITAL 60 PASTILLAS",
@@ -802,13 +802,13 @@ window.CATALOG_SEED = {
           "name": "CENTRUM MUJER",
           "price": "17.00",
           "id": "p-nqghhrb",
-          "image": "assets/img/products/centrum-mujer-46e052.jpg"
+          "image": "assets/img/products/centrum-mujer-019bb1.avif"
         },
         {
           "name": "CENTRUM NIÑO",
           "price": "17.00",
           "id": "p-nia8kpt",
-          "image": "assets/img/products/centrum-nino-b5aba4.jpg"
+          "image": "assets/img/products/centrum-nino-570580.webp"
         },
         {
           "name": "COLÁGENO + CALCIO",
@@ -826,25 +826,25 @@ window.CATALOG_SEED = {
           "name": "KOMILON",
           "price": "12.00",
           "id": "p-9vyrioa",
-          "image": "assets/img/products/komilon-fe46a9.jpg"
+          "image": "assets/img/products/komilon-df0772.jpg"
         },
         {
           "name": "MUJER PLEX",
           "price": "Consultar precio",
           "id": "p-4dytfab",
-          "image": "assets/img/products/mujer-plex-10605f.jpg"
+          "image": "assets/img/products/mujer-plex-4373c1.jpg"
         },
         {
           "name": "NEUROTROPAS",
           "price": "Consultar precio",
           "id": "p-vk7lyxl",
-          "image": "assets/img/products/neurotropas-95d78e.jpg"
+          "image": "assets/img/products/neurotropas-ab349b.jpg"
         },
         {
           "name": "NEUROBION 25000",
           "price": "17.00",
           "id": "p-wmu163t",
-          "image": "assets/img/products/neurobion-25000-4a675e.jpg"
+          "image": "assets/img/products/neurobion-25000-4e3d57.webp"
         },
         {
           "name": "NEUROBION 25000 INYECCIÓN",
@@ -856,19 +856,19 @@ window.CATALOG_SEED = {
           "name": "NEUROBION 3 EN 1",
           "price": "17.00",
           "id": "p-lcxrorh",
-          "image": "assets/img/products/neurobion-3-en-1-95d014.jpg"
+          "image": "assets/img/products/neurobion-3-en-1-b57150.webp"
         },
         {
           "name": "NEUROBION 50 MIL",
           "price": "17.00",
           "id": "p-onwdu9u",
-          "image": "assets/img/products/neurobion-50-mil-a51221.jpg"
+          "image": "assets/img/products/neurobion-50-mil-f4e233.jpg"
         },
         {
           "name": "NEUROBION 50 MIL OJITO",
           "price": "Consultar precio",
           "id": "p-f382sma",
-          "image": "assets/img/products/neurobion-50-mil-ojito-423f87.jpg"
+          "image": "assets/img/products/neurobion-50-mil-ojito-4aba9d.jpg"
         },
         {
           "name": "NEUROFORTÁN",
@@ -892,19 +892,19 @@ window.CATALOG_SEED = {
           "name": "SUKROL JARABE",
           "price": "14.00",
           "id": "p-4iyfhbw",
-          "image": "assets/img/products/sukrol-jarabe-107717.jpg"
+          "image": "assets/img/products/sukrol-jarabe-4456f1.webp"
         },
         {
           "name": "SUKROL PASTILLA",
           "price": "11.00",
           "id": "p-qvbdja9",
-          "image": "assets/img/products/sukrol-pastilla-a1d07f.jpg"
+          "image": "assets/img/products/sukrol-pastilla-62c80c.jpg"
         },
         {
           "name": "VITAL 4 EN 1",
           "price": "14.00",
           "id": "p-6zfr6vc",
-          "image": "assets/img/products/vital-4-en-1-6c0cdb.jpg"
+          "image": "assets/img/products/vital-4-en-1-820b0f.jpg"
         },
         {
           "name": "VITAL FUERTE JARABE",
@@ -934,19 +934,19 @@ window.CATALOG_SEED = {
           "name": "VITAL FUERTE VITAMINADO PASTILLAS",
           "price": "15.00",
           "id": "p-d2ywzm5",
-          "image": "assets/img/products/vital-fuerte-vitaminado-pastillas-276c36.jpg"
+          "image": "assets/img/products/vital-fuerte-vitaminado-pastillas-1808c4.jpg"
         },
         {
           "name": "VITAMINAL TRES TOROS",
           "price": "18.00",
           "id": "p-82t4viw",
-          "image": "assets/img/products/vitaminal-tres-toros-dad532.jpg"
+          "image": "assets/img/products/vitaminal-tres-toros-2618a6.jpg"
         },
         {
           "name": "VITAMINAS 10 EN 1",
           "price": "18.00",
           "id": "p-5v47c7t",
-          "image": "assets/img/products/vitaminas-10-en-1-397324.jpg"
+          "image": "assets/img/products/vitaminas-10-en-1-3517a0.jpg"
         }
       ]
     },
@@ -965,7 +965,7 @@ window.CATALOG_SEED = {
           "name": "AMOXICILINA JARABE",
           "price": "15.00",
           "id": "p-47b3rd1",
-          "image": "assets/img/products/amoxicilina-jarabe-3d815a.jpg"
+          "image": "assets/img/products/amoxicilina-jarabe-6aacdd.jpg"
         },
         {
           "name": "CIPROFLOXACINA",
@@ -983,37 +983,37 @@ window.CATALOG_SEED = {
           "name": "LEVECILIN 400MG",
           "price": "Consultar precio",
           "id": "p-smj2cty",
-          "image": "assets/img/products/levecilin-400mg-746b82.jpg"
+          "image": "assets/img/products/levecilin-400mg-fcd883.jpg"
         },
         {
           "name": "LOMBRINIÑOS",
           "price": "33.00",
           "id": "p-5wwbm3t",
-          "image": "assets/img/products/lombrininos-1c6982.jpg"
+          "image": "assets/img/products/lombrininos-58d90c.jpg"
         },
         {
           "name": "MEBENDAZOL JARABE",
           "price": "12.00",
           "id": "p-dip4f68",
-          "image": "assets/img/products/mebendazol-jarabe-4f44f6.jpg"
+          "image": "assets/img/products/mebendazol-jarabe-b93aaa.jpg"
         },
         {
           "name": "MEBENDAZOL PASTILLA",
           "price": "8.00",
           "id": "p-vv48pga",
-          "image": "assets/img/products/mebendazol-pastilla-23b630.jpg"
+          "image": "assets/img/products/mebendazol-pastilla-5a69c5.jpg"
         },
         {
           "name": "METRONIDAZOL JARABE",
           "price": "Consultar precio",
           "id": "p-i2q75c8",
-          "image": "assets/img/products/metronidazol-jarabe-8b9c30.jpg"
+          "image": "assets/img/products/metronidazol-jarabe-ccbc7b.jpg"
         },
         {
           "name": "METRONIDAZOL PASTILLA",
           "price": "Consultar precio",
           "id": "p-12ssdvx",
-          "image": "assets/img/products/metronidazol-pastilla-b678c3.jpg"
+          "image": "assets/img/products/metronidazol-pastilla-fd5c60.jpg"
         },
         {
           "name": "SALUPRIM",
@@ -1031,7 +1031,7 @@ window.CATALOG_SEED = {
           "name": "SULFABAC",
           "price": "9.75",
           "id": "p-al60dr0",
-          "image": "assets/img/products/sulfabac-4c2c4d.jpg"
+          "image": "assets/img/products/sulfabac-307d89.jpg"
         }
       ]
     },
@@ -1044,7 +1044,7 @@ window.CATALOG_SEED = {
           "name": "BARMICIL",
           "price": "10.00",
           "id": "p-8bicr9y",
-          "image": "assets/img/products/barmicil-647acf.jpg"
+          "image": "assets/img/products/barmicil-e745cd.jpg"
         },
         {
           "name": "CANESTEN TRIPLE ACCIÓN",
@@ -1056,7 +1056,7 @@ window.CATALOG_SEED = {
           "name": "CLOTRIPLEX",
           "price": "Consultar precio",
           "id": "p-khirjcs",
-          "image": "assets/img/products/clotriplex-b8e41b.jpg"
+          "image": "assets/img/products/clotriplex-1a7ca2.jpg"
         },
         {
           "name": "COFAL AZUL 60 GRS UNIDADES",
@@ -1068,37 +1068,37 @@ window.CATALOG_SEED = {
           "name": "COFAL ROJO 60 GRS UNIDADES",
           "price": "10.00",
           "id": "p-vxwafow",
-          "image": "assets/img/products/cofal-rojo-60-grs-unidades-6b50d4.jpg"
+          "image": "assets/img/products/cofal-rojo-60-grs-unidades-95d338.jpg"
         },
         {
           "name": "CREMA BÉSAME",
           "price": "5.75",
           "id": "p-kan55p9",
-          "image": "assets/img/products/crema-besame-c32b82.jpg"
+          "image": "assets/img/products/crema-besame-6f1452.jpg"
         },
         {
           "name": "CREMA BLANCO DERMA ALOE VERA",
           "price": "8.75",
           "id": "p-okqbic4",
-          "image": "assets/img/products/crema-blanco-derma-aloe-vera-cf74db.jpg"
+          "image": "assets/img/products/crema-blanco-derma-aloe-vera-cb284f.jpg"
         },
         {
           "name": "CREMA BLANCO DERMA ARGÁN",
           "price": "8.75",
           "id": "p-pj574li",
-          "image": "assets/img/products/crema-blanco-derma-argan-5e8096.jpg"
+          "image": "assets/img/products/crema-blanco-derma-argan-ebf171.jpg"
         },
         {
           "name": "CREMA BLANCO DERMA AVENA",
           "price": "8.75",
           "id": "p-55j8ml9",
-          "image": "assets/img/products/crema-blanco-derma-avena-911b2b.jpg"
+          "image": "assets/img/products/crema-blanco-derma-avena-04e1fa.jpg"
         },
         {
           "name": "CREMA BLANCO DERMA CLÁSICA",
           "price": "8.75",
           "id": "p-8q4ug79",
-          "image": "assets/img/products/crema-blanco-derma-clasica-816ce3.jpg"
+          "image": "assets/img/products/crema-blanco-derma-clasica-23d6b2.jpg"
         },
         {
           "name": "CREMA ROSY ROSADA UNIDADES",
@@ -1110,13 +1110,13 @@ window.CATALOG_SEED = {
           "name": "CREMA ROSY VERDE UNIDADES",
           "price": "4.75",
           "id": "p-gcbyvqd",
-          "image": "assets/img/products/crema-rosy-verde-unidades-8f26ee.jpg"
+          "image": "assets/img/products/crema-rosy-verde-unidades-df9a4f.jpg"
         },
         {
           "name": "CURADERMA POMADA",
           "price": "3.05",
           "id": "p-xzz1nvt",
-          "image": "assets/img/products/curaderma-pomada-efe94d.jpg"
+          "image": "assets/img/products/curaderma-pomada-34dba9.jpg"
         },
         {
           "name": "GMS AMARILLO BALSÁMICO",
@@ -1158,7 +1158,7 @@ window.CATALOG_SEED = {
           "name": "SANA SANA",
           "price": "3.25",
           "id": "p-pje7wid",
-          "image": "assets/img/products/sana-sana-111d97.jpg"
+          "image": "assets/img/products/sana-sana-f811da.jpg"
         },
         {
           "name": "UNGÜENTO DE LEÓN 90 GRS UNIDADES",
@@ -1177,19 +1177,19 @@ window.CATALOG_SEED = {
           "name": "ACEITE BABY CHIC 8 ONZ",
           "price": "8.75",
           "id": "p-jsej4ji",
-          "image": "assets/img/products/aceite-baby-chic-8-onz-1b4ffe.jpg"
+          "image": "assets/img/products/aceite-baby-chic-8-onz-3ea934.jpg"
         },
         {
           "name": "ACEITE BABY CHIC 4 ONZ",
           "price": "6.00",
           "id": "p-lmv2zr9",
-          "image": "assets/img/products/aceite-baby-chic-4-onz-d7f621.jpg"
+          "image": "assets/img/products/aceite-baby-chic-4-onz-9620a8.jpg"
         },
         {
           "name": "ACEITE BABY CHIC 2 ONZ",
           "price": "4.50",
           "id": "p-zfbub18",
-          "image": "assets/img/products/aceite-baby-chic-2-onz-1fe1d1.jpg"
+          "image": "assets/img/products/aceite-baby-chic-2-onz-c7df83.jpg"
         },
         {
           "name": "BACAOLINITA",
@@ -1213,7 +1213,7 @@ window.CATALOG_SEED = {
           "name": "BEBETINA PASTILLA",
           "price": "30.00",
           "id": "p-jjxyktg",
-          "image": "assets/img/products/bebetina-pastilla-6f2926.jpg"
+          "image": "assets/img/products/bebetina-pastilla-eef5bf.png"
         }
       ]
     },
@@ -1226,7 +1226,7 @@ window.CATALOG_SEED = {
           "name": "AJO MÁS PEREJIL",
           "price": "6.00",
           "id": "p-2y8ijmk",
-          "image": "assets/img/products/ajo-mas-perejil-1a7281.jpg"
+          "image": "assets/img/products/ajo-mas-perejil-7474e2.jpg"
         },
         {
           "name": "ACHICORIA JARABE CALIQUIMICA",
@@ -1244,19 +1244,19 @@ window.CATALOG_SEED = {
           "name": "AGUA FLORIDA DE LA ROSA AMARILLA",
           "price": "3.25",
           "id": "p-c1skhdj",
-          "image": "assets/img/products/agua-florida-de-la-rosa-amarilla-e80896.jpg"
+          "image": "assets/img/products/agua-florida-de-la-rosa-amarilla-0c48ad.jpg"
         },
         {
           "name": "AGUA FLORIDA DE LA ROSA BLANCA UNIDADES",
           "price": "3.25",
           "id": "p-johh92t",
-          "image": "assets/img/products/agua-florida-de-la-rosa-blanca-unidades-fff17a.jpg"
+          "image": "assets/img/products/agua-florida-de-la-rosa-blanca-unidades-9c2e7e.jpg"
         },
         {
           "name": "AGUA FLORIDA DE LA ROSA VERDE UNIDADES",
           "price": "3.25",
           "id": "p-aw1a9mp",
-          "image": "assets/img/products/agua-florida-de-la-rosa-verde-unidades-b0caae.jpg"
+          "image": "assets/img/products/agua-florida-de-la-rosa-verde-unidades-7f43bf.jpg"
         },
         {
           "name": "AZÚCAR DE LECHE PAQUETES",
@@ -1316,25 +1316,25 @@ window.CATALOG_SEED = {
           "name": "TINTURA RUIBARBO",
           "price": "3.25",
           "id": "p-xdjcnaq",
-          "image": "assets/img/products/tintura-ruibarbo-8f2eeb.jpg"
+          "image": "assets/img/products/tintura-ruibarbo-eb4ede.jpg"
         },
         {
           "name": "RÁBANO YODADO",
           "price": "17.00",
           "id": "p-wj1k4ht",
-          "image": "assets/img/products/rabano-yodado-4642da.jpg"
+          "image": "assets/img/products/rabano-yodado-f5aa6e.jpg"
         },
         {
           "name": "SIETE MACHOS GRANDE",
           "price": "4.75",
           "id": "p-lwol1ut",
-          "image": "assets/img/products/siete-machos-grande-3b42f5.jpg"
+          "image": "assets/img/products/siete-machos-grande-8dc0aa.jpg"
         },
         {
           "name": "SIETE MACHOS MEDIANO",
           "price": "2.75",
           "id": "p-3caq4r9",
-          "image": "assets/img/products/siete-machos-mediano-437468.jpg"
+          "image": "assets/img/products/siete-machos-mediano-8dce1c.jpg"
         },
         {
           "name": "SIETE ESPÍRITUS",
@@ -1346,25 +1346,25 @@ window.CATALOG_SEED = {
           "name": "SIETE ESPÍRITUS CALIQUIMICA",
           "price": "3.25",
           "id": "p-rrzho20",
-          "image": "assets/img/products/siete-espiritus-caliquimica-f4b864.jpg"
+          "image": "assets/img/products/siete-espiritus-caliquimica-50545d.jpg"
         },
         {
           "name": "TÉ DE NERVIOS VIDA",
           "price": "6.00",
           "id": "p-w2pp1ad",
-          "image": "assets/img/products/te-de-nervios-vida-a358dd.jpg"
+          "image": "assets/img/products/te-de-nervios-vida-3d5e1e.webp"
         },
         {
           "name": "TÉ DE TILO VIDA",
           "price": "6.00",
           "id": "p-5rs1blx",
-          "image": "assets/img/products/te-de-tilo-vida-f4edcc.jpg"
+          "image": "assets/img/products/te-de-tilo-vida-bc0259.webp"
         },
         {
           "name": "URIN",
           "price": "60.00",
           "id": "p-sip9iig",
-          "image": "assets/img/products/urin-972f37.jpg"
+          "image": "assets/img/products/urin-4cf0aa.webp"
         },
         {
           "name": "UROFIN",
@@ -1389,7 +1389,7 @@ window.CATALOG_SEED = {
           "name": "DROPADEX 10 CÁPSULAS",
           "price": "10.00",
           "id": "p-zb8xgdu",
-          "image": "assets/img/products/dropadex-10-capsulas-4094ad.jpg"
+          "image": "assets/img/products/dropadex-10-capsulas-dcb33b.png"
         },
         {
           "name": "NEOBOL SPRAY",
@@ -1413,7 +1413,7 @@ window.CATALOG_SEED = {
           "name": "PIOJINA 100 ML",
           "price": "4.10",
           "id": "p-9x7v0pg",
-          "image": "assets/img/products/piojina-100-ml-5a57ec.jpg"
+          "image": "assets/img/products/piojina-100-ml-39b446.jpg"
         },
         {
           "name": "VIOLETA GENCIANA 1 ONZ UNIDADES",
@@ -1429,5 +1429,6 @@ window.CATALOG_SEED = {
         }
       ]
     }
-  ]
+  ],
+  "version": 1784593066
 };

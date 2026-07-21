@@ -69,11 +69,23 @@
         })
         .catch(function () { return normalize(deepClone(window.CATALOG_SEED)); });
     }
-    // Sin servidor (file://): localStorage o datos semilla.
+    // Sin servidor (GitHub Pages / file://): usa localStorage, salvo que el
+    // catálogo publicado (seed.js) tenga una versión más nueva, en cuyo caso se
+    // adopta el nuevo (así las actualizaciones publicadas se ven sin borrar caché).
+    var seed = window.CATALOG_SEED;
     var raw = null;
     try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) {}
-    if (raw) { try { return Promise.resolve(normalize(JSON.parse(raw))); } catch (e) {} }
-    return Promise.resolve(normalize(deepClone(window.CATALOG_SEED)));
+    if (raw) {
+      try {
+        var saved = JSON.parse(raw);
+        var sameVersion = !seed.version || (saved && saved.version === seed.version);
+        if (sameVersion) return Promise.resolve(normalize(saved));
+      } catch (e) {}
+    }
+    // primera visita o versión publicada nueva: cargar el seed y guardarlo
+    var fresh = normalize(deepClone(seed));
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh)); } catch (e) {}
+    return Promise.resolve(fresh);
   }
 
   function save() {

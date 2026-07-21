@@ -16,6 +16,7 @@ Después, sube al repositorio:
 import json
 import os
 import sys
+import time
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 CATALOG = os.path.join(ROOT, "catalog.json")
@@ -27,6 +28,11 @@ if not os.path.exists(CATALOG):
 
 with open(CATALOG, "r", encoding="utf-8") as f:
     catalog = json.load(f)
+
+# Marca de versión: cada vez que horneas, cambia. La app publicada la usa para
+# detectar que hay una versión nueva y refrescarse (aunque el visitante tenga
+# una copia vieja guardada en su navegador).
+catalog["version"] = int(time.time())
 
 # Aviso si hay imágenes incrustadas (base64): pesan mucho en el seed.
 inline = sum(1 for c in catalog.get("categories", [])
